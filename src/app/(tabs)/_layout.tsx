@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Href, Tabs, usePathname, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Easing as RNEasing, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -216,33 +216,10 @@ export default function TabsLayout() {
       tabBar={() => <DayflowBottomTabBar />}
       screenOptions={{
         headerShown: false,
-        animation: 'shift',
-        transitionSpec: {
-          animation: 'timing',
-          config: {
-            duration: 160,
-            easing: RNEasing.bezier(0.16, 1, 0.3, 1),
-          },
-        },
+        animation: 'none',
         sceneStyle: {
           backgroundColor: palette.canvas,
         },
-        sceneStyleInterpolator: ({ current }) => ({
-          sceneStyle: {
-            opacity: current.progress.interpolate({
-              inputRange: [-1, 0, 1],
-              outputRange: [0, 1, 0],
-            }),
-            transform: [
-              {
-                translateX: current.progress.interpolate({
-                  inputRange: [-1, 0, 1],
-                  outputRange: [-16, 0, 16],
-                }),
-              },
-            ],
-          },
-        }),
       }}>
       <Tabs.Screen name="index" options={{ title: 'Today' }} />
       <Tabs.Screen name="focus" options={{ title: 'Focus' }} />

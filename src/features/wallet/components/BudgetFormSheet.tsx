@@ -59,7 +59,6 @@ export function BudgetFormSheet({
           }}
           isAmount
           error={error}
-          autoFocus
         />
 
         <View>

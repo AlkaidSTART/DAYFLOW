@@ -39,44 +39,54 @@ function WheelColumn({ items, selectedValue, onSelect, unitLabel }: WheelColumnP
   const { palette } = useResolvedTheme();
   const { haptic } = useHaptic();
   const scrollRef = useRef<ScrollView>(null);
-  const isDraggingRef = useRef(false);
-  const lastIndexRef = useRef<number>(-1);
+  const isUserScrollingRef = useRef(false);
+  const lastReportedValueRef = useRef(selectedValue);
+  const lastHapticIndexRef = useRef<number>(-1);
 
   const selectedIndex = Math.max(0, items.indexOf(selectedValue));
 
-  // 当外部改变选中值且非拖拽中时，滚动定位到该项
+  // 当外部改变选中值（如点击快捷预设）且非用户手动滚动中时，平滑滚动定位到该项
   useEffect(() => {
-    if (!isDraggingRef.current && selectedIndex >= 0) {
+    if (!isUserScrollingRef.current && selectedValue !== lastReportedValueRef.current) {
+      lastReportedValueRef.current = selectedValue;
+      const idx = Math.max(0, items.indexOf(selectedValue));
+      lastHapticIndexRef.current = idx;
       scrollRef.current?.scrollTo({
-        y: selectedIndex * ITEM_HEIGHT,
+        y: idx * ITEM_HEIGHT,
         animated: true,
       });
-      lastIndexRef.current = selectedIndex;
     }
-  }, [selectedIndex]);
-
-  // 初始即时定位
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      scrollRef.current?.scrollTo({
-        y: selectedIndex * ITEM_HEIGHT,
-        animated: false,
-      });
-      lastIndexRef.current = selectedIndex;
-    }, 50);
-    return () => clearTimeout(timer);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selectedValue, items]);
 
   const handleScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const offsetY = e.nativeEvent.contentOffset.y;
     const index = Math.round(offsetY / ITEM_HEIGHT);
     const clampedIndex = Math.max(0, Math.min(items.length - 1, index));
 
-    if (clampedIndex !== lastIndexRef.current) {
-      lastIndexRef.current = clampedIndex;
+    // 用户滚动过程中仅触发触觉反馈，不频繁回写父组件状态避免双向反馈震荡（鬼畜）
+    if (isUserScrollingRef.current && clampedIndex !== lastHapticIndexRef.current) {
+      lastHapticIndexRef.current = clampedIndex;
       haptic('selection');
-      onSelect(items[clampedIndex]);
     }
+  };
+
+  const handleSettle = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    isUserScrollingRef.current = false;
+    const offsetY = e.nativeEvent.contentOffset.y;
+    const index = Math.round(offsetY / ITEM_HEIGHT);
+    const clampedIndex = Math.max(0, Math.min(items.length - 1, index));
+    const finalVal = items[clampedIndex];
+
+    if (finalVal !== lastReportedValueRef.current) {
+      lastReportedValueRef.current = finalVal;
+      onSelect(finalVal);
+    }
+
+    // 确保滚轮精确吸附在刻度线上
+    scrollRef.current?.scrollTo({
+      y: clampedIndex * ITEM_HEIGHT,
+      animated: true,
+    });
   };
 
   return (
@@ -87,15 +97,22 @@ function WheelColumn({ items, selectedValue, onSelect, unitLabel }: WheelColumnP
         showsVerticalScrollIndicator={false}
         snapToInterval={ITEM_HEIGHT}
         decelerationRate="fast"
+        contentOffset={{ x: 0, y: selectedIndex * ITEM_HEIGHT }}
         onScrollBeginDrag={() => {
-          isDraggingRef.current = true;
+          isUserScrollingRef.current = true;
         }}
-        onScrollEndDrag={() => {
-          isDraggingRef.current = false;
+        onScrollEndDrag={(e) => {
+          // 若没有惯性滚动（轻微拖拽后松手），直接就地对齐并提交
+          const velocityY = e.nativeEvent.velocity?.y ?? 0;
+          if (Math.abs(velocityY) < 0.05) {
+            handleSettle(e);
+          }
+        }}
+        onMomentumScrollBegin={() => {
+          isUserScrollingRef.current = true;
         }}
         onMomentumScrollEnd={(e) => {
-          isDraggingRef.current = false;
-          handleScroll(e);
+          handleSettle(e);
         }}
         onScroll={handleScroll}
         scrollEventThrottle={16}
@@ -106,6 +123,9 @@ function WheelColumn({ items, selectedValue, onSelect, unitLabel }: WheelColumnP
             <Pressable
               key={item}
               onPress={() => {
+                isUserScrollingRef.current = false;
+                lastReportedValueRef.current = item;
+                lastHapticIndexRef.current = idx;
                 haptic('selection');
                 onSelect(item);
                 scrollRef.current?.scrollTo({

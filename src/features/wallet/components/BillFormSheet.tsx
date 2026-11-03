@@ -144,7 +144,6 @@ export function BillFormSheet({
           }}
           isAmount
           error={error}
-          autoFocus={!editingBill}
         />
 
         {/* 4 列分类网格选择器 (Section 6.8) */}

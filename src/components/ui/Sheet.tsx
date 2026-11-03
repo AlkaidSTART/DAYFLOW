@@ -1,8 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { AnimatePresence, motion, PanInfo } from 'motion/react';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  Dimensions,
   GestureResponderEvent,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -46,6 +48,27 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
   const translateY = useSharedValue(480);
   const backdropOpacity = useSharedValue(0);
   const dragStartY = useSharedValue(0);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+    const showSub = Keyboard.addListener(showEvent, (e) => {
+      const h = e.endCoordinates?.height ?? 0;
+      setKeyboardHeight(h);
+    });
+    const hideSub = Keyboard.addListener(hideEvent, () => {
+      setKeyboardHeight(0);
+    });
+
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   useEffect(() => {
     if (Platform.OS === 'web') return;
@@ -228,6 +251,12 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
 
   if (!visible) return null;
 
+  const windowHeight = Dimensions.get('window').height;
+  const dynamicMaxHeight =
+    keyboardHeight > 0
+      ? Math.max(220, windowHeight - keyboardHeight - insets.top - 16)
+      : '85%';
+
   return (
     <Modal
       visible={visible}
@@ -237,7 +266,12 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
       onRequestClose={onClose}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.root}>
+        style={[
+          styles.root,
+          Platform.OS === 'android' && keyboardHeight > 0
+            ? { paddingBottom: keyboardHeight }
+            : null,
+        ]}>
         {/* 半透明遮罩 */}
         <Animated.View
           style={[
@@ -248,8 +282,12 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
           <Pressable
             style={styles.flex1}
             onPress={() => {
-              haptic('selection');
-              onClose();
+              if (keyboardHeight > 0) {
+                Keyboard.dismiss();
+              } else {
+                haptic('selection');
+                onClose();
+              }
             }}
             accessibilityRole="button"
             accessibilityLabel="关闭弹窗"
@@ -263,6 +301,7 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
             {
               backgroundColor: palette.surface,
               borderColor: palette.line,
+              maxHeight: dynamicMaxHeight,
               paddingBottom: Math.max(insets.bottom, 24),
             },
             sheetStyle,
@@ -289,6 +328,7 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
               </Text>
               <Pressable
                 onPress={() => {
+                  Keyboard.dismiss();
                   haptic('selection');
                   onClose();
                 }}
@@ -304,7 +344,11 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
           <ScrollView
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
-            contentContainerStyle={styles.scrollContent}>
+            keyboardDismissMode="on-drag"
+            contentContainerStyle={[
+              styles.scrollContent,
+              keyboardHeight > 0 ? { paddingBottom: 32 } : null,
+            ]}>
             {children}
           </ScrollView>
         </Animated.View>

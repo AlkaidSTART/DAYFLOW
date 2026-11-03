@@ -27,7 +27,7 @@ function parseInitialSubtitle(sub?: string) {
     return {
       category: '',
       date: '今天' as const,
-      hour: '14',
+      hour: '00',
       minute: '00',
       hasTime: false,
     };
@@ -35,7 +35,7 @@ function parseInitialSubtitle(sub?: string) {
 
   let category = '';
   let date: '今天' | '明天' = '今天';
-  let hour = '14';
+  let hour = '00';
   let minute = '00';
   let hasTime = false;
 
@@ -100,7 +100,7 @@ export function TaskFormSheet({
   // 分类与滚动时间选择状态
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedDate, setSelectedDate] = useState<'今天' | '明天'>('今天');
-  const [selectedHour, setSelectedHour] = useState('14');
+  const [selectedHour, setSelectedHour] = useState('00');
   const [selectedMinute, setSelectedMinute] = useState('00');
   const [hasTime, setHasTime] = useState(false);
   const [customSubtitle, setCustomSubtitle] = useState<string | null>(null);
@@ -126,7 +126,7 @@ export function TaskFormSheet({
         setIsTop3(defaultIsTop3);
         setSelectedCategory('');
         setSelectedDate('今天');
-        setSelectedHour('14');
+        setSelectedHour('00');
         setSelectedMinute('00');
         setHasTime(false);
         setCustomSubtitle(null);
@@ -195,7 +195,6 @@ export function TaskFormSheet({
             if (error) setError(null);
           }}
           error={error}
-          autoFocus={!editingTask}
         />
 
         {/* 分类快捷选择 */}
