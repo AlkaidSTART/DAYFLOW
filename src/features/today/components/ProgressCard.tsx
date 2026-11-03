@@ -22,13 +22,6 @@ export type ProgressCardProps = {
   onPressDailyReview: () => void;
 };
 
-/**
- * Section 6.4 & 7.1: 进度卡（ProgressCard）
- * - 卡片内含：已完成 2 / 5、百分比、细进度条
- * - 进度条高度 6，圆角 full，轨道 surface-muted，填充 accent
- * - 无任务时：进度条隐藏，展示「今天还没有任务，从最重要的一件事开始。」+ 新建按钮，不展示 0% 或 NaN
- * - 百分比文字使用 tabular-nums
- */
 export function ProgressCard({
   progress,
   focusSessionsCount,
@@ -100,8 +93,14 @@ export function ProgressCard({
             {/* 高度 6，圆角 full，轨道 surface-muted，填充 accent */}
             <View className="h-[6px] rounded-full bg-surface-muted dark:bg-surface-muted-dark overflow-hidden">
               <Animated.View
-                style={animatedBarStyle}
-                className="h-full rounded-full bg-accent dark:bg-accent-dark"
+                style={[
+                  {
+                    height: '100%',
+                    borderRadius: 999,
+                    backgroundColor: palette.accent,
+                  },
+                  animatedBarStyle,
+                ]}
               />
             </View>
           </>

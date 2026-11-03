@@ -24,12 +24,6 @@ export type TimerDisplayProps = {
   onRestart: () => void;
 };
 
-/**
- * Section 6.5 & 8.2:
- * - 计时数字：Display 放大版 64/72，tabular-nums，ink；暂停时 ink-muted
- * - 进度：计时器下方 4px 线性进度条，accent 填充；休息模式使用 success；MVP 不使用环形图
- * - 完成态：数字替换为「完成」+ 本次时长 +「再来一次」按钮（320ms easeOutCubic 轻微 scale 1 → 1.02 → 1 + 淡入）
- */
 export function TimerDisplay({
   mode,
   phase,
@@ -81,7 +75,8 @@ export function TimerDisplay({
 
   if (phase === 'completed') {
     return (
-      <Animated.View style={completeAnimatedStyle} className="items-center py-6 px-6">
+      <Animated.View
+        style={[{ alignItems: 'center', paddingVertical: 24, paddingHorizontal: 24 }, completeAnimatedStyle]}>
         <View
           accessible={false}
           className="w-14 h-14 rounded-full bg-surface-muted dark:bg-surface-muted-dark items-center justify-center mb-4">
@@ -115,9 +110,13 @@ export function TimerDisplay({
       <View className="flex-row items-center mb-4">
         <View
           accessible={false}
-          className={`w-2.5 h-2.5 rounded-full mr-2 ${
-            isBreak ? 'bg-success dark:bg-success-dark' : 'bg-accent dark:bg-accent-dark'
-          }`}
+          style={{
+            width: 10,
+            height: 10,
+            borderRadius: 999,
+            marginRight: 8,
+            backgroundColor: isBreak ? palette.success : palette.accent,
+          }}
         />
         <Text className="text-caption text-ink-muted dark:text-ink-muted-dark">
           {phase === 'paused' ? `${modeLabel}已暂停` : modeLabel}
@@ -139,10 +138,14 @@ export function TimerDisplay({
       {/* 计时器下方 4px 线性进度条 */}
       <View className="w-[220px] h-[4px] rounded-full bg-surface-muted dark:bg-surface-muted-dark mt-6 overflow-hidden">
         <Animated.View
-          style={barStyle}
-          className={`h-full rounded-full ${
-            isBreak ? 'bg-success dark:bg-success-dark' : 'bg-accent dark:bg-accent-dark'
-          }`}
+          style={[
+            {
+              height: '100%',
+              borderRadius: 999,
+              backgroundColor: isBreak ? palette.success : palette.accent,
+            },
+            barStyle,
+          ]}
         />
       </View>
     </View>

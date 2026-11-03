@@ -9,6 +9,8 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useSettingsStore } from '@/features/settings/store/settings-store';
+import { useResolvedTheme } from '@/hooks/use-resolved-theme';
+import { RadiusTokens } from '@/theme/tokens';
 
 /**
  * Section 6.12: 操作成功底部 Snackbar
@@ -18,6 +20,7 @@ export function Snackbar() {
   const snackbar = useSettingsStore((s) => s.snackbar);
   const hideSnackbar = useSettingsStore((s) => s.hideSnackbar);
   const insets = useSafeAreaInsets();
+  const { isDark, palette } = useResolvedTheme();
 
   const opacity = useSharedValue(0);
   const translateY = useSharedValue(16);
@@ -56,14 +59,35 @@ export function Snackbar() {
     <Animated.View
       pointerEvents="box-none"
       style={[
-        animatedStyle,
         {
+          position: 'absolute',
+          left: 24,
+          right: 24,
           bottom: Math.max(insets.bottom, 16) + 72,
+          zIndex: 90,
         },
-      ]}
-      className="absolute left-6 right-6 z-50">
-      <View className="bg-ink dark:bg-surface-selected-dark rounded-md px-4 py-3.5 flex-row items-center justify-between border border-line dark:border-line-dark">
-        <Text className="text-caption text-canvas dark:text-ink-dark flex-1 mr-3">
+        animatedStyle,
+      ]}>
+      <View
+        style={{
+          backgroundColor: isDark ? palette.surfaceSelected : palette.ink,
+          borderRadius: RadiusTokens.md,
+          paddingHorizontal: 16,
+          paddingVertical: 14,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          borderWidth: 1,
+          borderColor: palette.line,
+        }}>
+        <Text
+          style={{
+            color: isDark ? palette.ink : palette.canvas,
+            fontSize: 14,
+            lineHeight: 20,
+            flex: 1,
+            marginRight: 12,
+          }}>
           {snackbar.message}
         </Text>
         {snackbar.onUndo ? (
@@ -75,8 +99,14 @@ export function Snackbar() {
             hitSlop={10}
             accessibilityRole="button"
             accessibilityLabel={snackbar.undoLabel ?? '撤销'}
-            className="px-2 py-1">
-            <Text className="text-caption font-semibold text-accent-soft dark:text-accent-dark">
+            style={{ paddingHorizontal: 8, paddingVertical: 4 }}>
+            <Text
+              style={{
+                color: isDark ? palette.accent : palette.accentSoft,
+                fontSize: 14,
+                lineHeight: 20,
+                fontWeight: '600',
+              }}>
               {snackbar.undoLabel ?? '撤销'}
             </Text>
           </Pressable>

@@ -3,6 +3,7 @@ import { AppState, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { BannerTip } from '@/components/ui/BannerTip';
+import { TabPageTransition } from '@/components/ui/TabPageTransition';
 import { FinishConfirmSheet } from '@/features/focus/components/FinishConfirmSheet';
 import { ModeSwitch } from '@/features/focus/components/ModeSwitch';
 import { TaskLinkSheet } from '@/features/focus/components/TaskLinkSheet';
@@ -142,6 +143,7 @@ export default function FocusScreen() {
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-canvas dark:bg-canvas-dark px-6">
+      <TabPageTransition routeKey="focus">
       <View className="flex-1 justify-between py-6">
         {/* 顶部：标题 + 模式切换 */}
         <View>
@@ -205,6 +207,7 @@ export default function FocusScreen() {
           )}
         </View>
       </View>
+      </TabPageTransition>
 
       {/* 关联任务选择弹层 */}
       <TaskLinkSheet

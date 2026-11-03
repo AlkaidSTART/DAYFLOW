@@ -96,12 +96,19 @@ export const TaskRow = React.memo(function TaskRow({
         hitSlop={8}
         className="w-12 h-12 -ml-2 mr-1 items-center justify-center">
         <Animated.View
-          style={checkAnimatedStyle}
-          className={`w-[24px] h-[24px] rounded-full items-center justify-center ${
-            isCompleted
-              ? 'bg-success dark:bg-success-dark'
-              : 'border-2 border-line dark:border-line-dark bg-transparent'
-          }`}>
+          style={[
+            {
+              width: 24,
+              height: 24,
+              borderRadius: 999,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: isCompleted ? palette.success : 'transparent',
+              borderWidth: isCompleted ? 0 : 2,
+              borderColor: palette.line,
+            },
+            checkAnimatedStyle,
+          ]}>
           {isCompleted ? (
             <Ionicons name="checkmark" size={15} color="#FFFFFF" />
           ) : null}
@@ -126,8 +133,15 @@ export const TaskRow = React.memo(function TaskRow({
           {/* 200ms 从左到右绘制删除线 */}
           <Animated.View
             pointerEvents="none"
-            style={strikeAnimatedStyle}
-            className="absolute left-0 h-[1.5px] bg-ink-subtle dark:bg-ink-subtle-dark"
+            style={[
+              {
+                position: 'absolute',
+                left: 0,
+                height: 1.5,
+                backgroundColor: palette.inkSubtle,
+              },
+              strikeAnimatedStyle,
+            ]}
           />
         </View>
 

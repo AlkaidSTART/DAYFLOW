@@ -5,6 +5,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { EmptyState } from '@/components/ui/EmptyState';
+import { TabPageTransition } from '@/components/ui/TabPageTransition';
 import { useFocusStore } from '@/features/focus/store/focus-store';
 import { useSettingsStore } from '@/features/settings/store/settings-store';
 import { DailyReviewSheet } from '@/features/today/components/DailyReviewSheet';
@@ -127,6 +128,7 @@ export default function TodayScreen() {
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-canvas dark:bg-canvas-dark">
+      <TabPageTransition routeKey="today">
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 40 }}
@@ -246,6 +248,7 @@ export default function TodayScreen() {
           </View>
         )}
       </ScrollView>
+      </TabPageTransition>
 
       {/* 新建 / 编辑任务底部弹层 */}
       <TaskFormSheet

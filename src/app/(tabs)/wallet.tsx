@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { BannerTip } from '@/components/ui/BannerTip';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Sheet } from '@/components/ui/Sheet';
+import { TabPageTransition } from '@/components/ui/TabPageTransition';
 import { useSettingsStore } from '@/features/settings/store/settings-store';
 import { BillFormSheet } from '@/features/wallet/components/BillFormSheet';
 import { BillRow } from '@/features/wallet/components/BillRow';
@@ -137,6 +138,7 @@ export default function WalletScreen() {
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-canvas dark:bg-canvas-dark">
+      <TabPageTransition routeKey="wallet">
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: 112 }}
@@ -267,6 +269,7 @@ export default function WalletScreen() {
           </View>
         </View>
       </ScrollView>
+      </TabPageTransition>
 
       {/* 右下角 FAB：72×72 触控区内 56×56 圆形按钮，避让底部导航 16 (Section 7.3) */}
       <View

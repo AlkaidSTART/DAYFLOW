@@ -19,13 +19,6 @@ export type BudgetCardProps = {
   onPressEditBudget: () => void;
 };
 
-/**
- * Section 6.6: 预算卡（BudgetCard）
- * - 大金额 Display 32–40，tabular-nums
- * - 使用率 > 80%：进度条变 warning；超支：进度条 danger，并显示「已超出 ¥ 120.00」
- * - 未设置预算：展示「设置本月预算」按钮，不展示进度条
- * - 每日可用金额按分取整后展示两位小数
- */
 export function BudgetCard({ summary, onPressEditBudget }: BudgetCardProps) {
   const { theme, palette } = useResolvedTheme();
   const hasBudget = summary.budgetCents > 0;
@@ -48,11 +41,11 @@ export function BudgetCard({ summary, onPressEditBudget }: BudgetCardProps) {
     width: `${Math.max(0, Math.min(100, progressWidth.value))}%`,
   }));
 
-  const barColorClass = summary.isOverspent
-    ? 'bg-danger dark:bg-danger-dark'
+  const barColor = summary.isOverspent
+    ? palette.danger
     : summary.isWarning
-      ? 'bg-warning dark:bg-warning-dark'
-      : 'bg-accent dark:bg-accent-dark';
+      ? palette.warning
+      : palette.accent;
 
   const statusTextColorClass = summary.isOverspent
     ? 'text-danger dark:text-danger-dark font-semibold'
@@ -126,8 +119,14 @@ export function BudgetCard({ summary, onPressEditBudget }: BudgetCardProps) {
           {/* 进度条 */}
           <View className="h-[8px] rounded-full bg-surface-muted dark:bg-surface-muted-dark overflow-hidden mb-3">
             <Animated.View
-              style={barAnimatedStyle}
-              className={`h-full rounded-full ${barColorClass}`}
+              style={[
+                {
+                  height: '100%',
+                  borderRadius: 999,
+                  backgroundColor: barColor,
+                },
+                barAnimatedStyle,
+              ]}
             />
           </View>
 

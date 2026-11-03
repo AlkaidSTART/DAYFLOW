@@ -6,6 +6,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  StyleSheet,
   Text,
   View,
 } from 'react-native';
@@ -18,6 +19,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useResolvedTheme } from '@/hooks/use-resolved-theme';
+import { RadiusTokens } from '@/theme/tokens';
 
 export type SheetProps = {
   visible: boolean;
@@ -28,7 +30,7 @@ export type SheetProps = {
 
 /**
  * Section 6.11 & 8.2: 底部弹层（Sheet）
- * 顶部圆角 xl (28px)，背景 surface，拖拽指示条 36×4 line
+ * 顶部圆角 xl (28px)，背景 surface（不透明实色），拖拽指示条 36×4 line
  * 遮罩 rgba(28, 25, 23, 0.35) (200ms easeOut)
  * 弹层入场 280ms cubic-bezier(0.32, 0.72, 0, 1)
  * 最大高度 85%，内容超出可滚动
@@ -37,7 +39,7 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
   const insets = useSafeAreaInsets();
   const { palette } = useResolvedTheme();
 
-  const translateY = useSharedValue(360);
+  const translateY = useSharedValue(420);
   const backdropOpacity = useSharedValue(0);
 
   useEffect(() => {
@@ -52,7 +54,7 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
       });
     } else {
       backdropOpacity.value = 0;
-      translateY.value = 360;
+      translateY.value = 420;
     }
   }, [visible, backdropOpacity, translateY]);
 
@@ -64,6 +66,8 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
     transform: [{ translateY: translateY.value }],
   }));
 
+  if (!visible) return null;
+
   return (
     <Modal
       visible={visible}
@@ -73,41 +77,58 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
       onRequestClose={onClose}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        className="flex-1 justify-end">
+        style={styles.root}>
+        {/* 半透明遮罩 */}
         <Animated.View
-          style={[{ backgroundColor: palette.overlay }, backdropStyle]}
-          className="absolute inset-0">
+          style={[
+            StyleSheet.absoluteFill,
+            { backgroundColor: palette.overlay },
+            backdropStyle,
+          ]}>
           <Pressable
-            className="flex-1"
+            style={styles.flex1}
             onPress={onClose}
             accessibilityRole="button"
             accessibilityLabel="关闭弹窗"
           />
         </Animated.View>
 
+        {/* 底部实色弹层容器 */}
         <Animated.View
           style={[
-            sheetStyle,
+            styles.sheetContainer,
             {
-              maxHeight: '85%',
+              backgroundColor: palette.surface,
+              borderColor: palette.line,
               paddingBottom: Math.max(insets.bottom, 24),
             },
-          ]}
-          className="bg-surface dark:bg-surface-dark rounded-t-xl px-6 pt-3 border-t border-line dark:border-line-dark">
+            sheetStyle,
+          ]}>
           {/* 36×4 拖拽指示条 */}
-          <View accessible={false} className="items-center pb-3">
-            <View className="w-[36px] h-[4px] rounded-full bg-line dark:bg-line-dark" />
+          <View accessible={false} style={styles.handleWrapper}>
+            <View
+              style={[
+                styles.handleBar,
+                { backgroundColor: palette.line },
+              ]}
+            />
           </View>
 
           {title ? (
-            <View className="flex-row items-center justify-between mb-4">
-              <Text className="text-h2 text-ink dark:text-ink-dark">{title}</Text>
+            <View style={styles.headerRow}>
+              <Text
+                style={[
+                  styles.titleText,
+                  { color: palette.ink },
+                ]}>
+                {title}
+              </Text>
               <Pressable
                 onPress={onClose}
                 hitSlop={12}
                 accessibilityRole="button"
                 accessibilityLabel="关闭"
-                className="w-10 h-10 items-center justify-center rounded-full">
+                style={styles.closeBtn}>
                 <Ionicons name="close-outline" size={24} color={palette.inkMuted} />
               </Pressable>
             </View>
@@ -116,7 +137,7 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
           <ScrollView
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
-            contentContainerStyle={{ paddingBottom: 8 }}>
+            contentContainerStyle={styles.scrollContent}>
             {children}
           </ScrollView>
         </Animated.View>
@@ -124,3 +145,66 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
     </Modal>
   );
 }
+
+const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  flex1: {
+    flex: 1,
+  },
+  sheetContainer: {
+    width: '100%',
+    maxHeight: '85%',
+    borderTopLeftRadius: RadiusTokens.xl,
+    borderTopRightRadius: RadiusTokens.xl,
+    borderTopWidth: 1,
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#1C1917',
+        shadowOffset: { width: 0, height: -4 },
+        shadowOpacity: 0.12,
+        shadowRadius: 16,
+      },
+      android: {
+        elevation: 16,
+      },
+      web: {
+        boxShadow: '0px -6px 24px rgba(28, 25, 23, 0.14)',
+      } as unknown as object,
+    }),
+  },
+  handleWrapper: {
+    alignItems: 'center',
+    paddingBottom: 12,
+  },
+  handleBar: {
+    width: 36,
+    height: 4,
+    borderRadius: 999,
+  },
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  titleText: {
+    fontSize: 22,
+    lineHeight: 30,
+    fontWeight: '600',
+  },
+  closeBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 999,
+  },
+  scrollContent: {
+    paddingBottom: 8,
+  },
+});

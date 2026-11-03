@@ -1,5 +1,13 @@
 import React from 'react';
-import { AccessibilityRole, Pressable, StyleProp, Text, View, ViewStyle } from 'react-native';
+import {
+  AccessibilityRole,
+  Pressable,
+  StyleProp,
+  Text,
+  TextStyle,
+  View,
+  ViewStyle,
+} from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -7,7 +15,16 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'success';
+import { useResolvedTheme } from '@/hooks/use-resolved-theme';
+import { RadiusTokens } from '@/theme/tokens';
+
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'outline'
+  | 'ghost'
+  | 'danger'
+  | 'success';
 export type ButtonSize = 'lg' | 'md' | 'sm';
 
 export type ButtonProps = {
@@ -24,8 +41,6 @@ export type ButtonProps = {
   className?: string;
 };
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
 export function Button({
   label,
   onPress,
@@ -39,6 +54,7 @@ export function Button({
   style,
   className = '',
 }: ButtonProps) {
+  const { palette } = useResolvedTheme();
   const scale = useSharedValue(1);
   const pressOpacity = useSharedValue(1);
 
@@ -70,48 +86,121 @@ export function Button({
     });
   };
 
-  const sizeClasses: Record<ButtonSize, string> = {
-    lg: 'h-[56px] px-7 rounded-full',
-    md: 'h-[48px] px-5 rounded-md',
-    sm: 'h-[36px] px-3.5 rounded-md',
+  const sizeStyles: Record<ButtonSize, ViewStyle> = {
+    lg: {
+      height: 56,
+      paddingHorizontal: 28,
+      borderRadius: RadiusTokens.full,
+    },
+    md: {
+      height: 48,
+      paddingHorizontal: 20,
+      borderRadius: RadiusTokens.md,
+    },
+    sm: {
+      height: 36,
+      paddingHorizontal: 14,
+      borderRadius: RadiusTokens.md,
+    },
   };
 
-  const variantClasses: Record<ButtonVariant, string> = {
-    primary: 'bg-accent dark:bg-accent-dark',
-    secondary: 'bg-surface-muted dark:bg-surface-muted-dark',
-    outline: 'bg-transparent border border-line dark:border-line-dark',
-    ghost: 'bg-transparent',
-    danger: 'bg-danger dark:bg-danger-dark',
-    success: 'bg-success dark:bg-success-dark',
+  const variantContainerStyles: Record<ButtonVariant, ViewStyle> = {
+    primary: {
+      backgroundColor: palette.accent,
+    },
+    secondary: {
+      backgroundColor: palette.surfaceMuted,
+    },
+    outline: {
+      backgroundColor: 'transparent',
+      borderWidth: 1,
+      borderColor: palette.line,
+    },
+    ghost: {
+      backgroundColor: 'transparent',
+    },
+    danger: {
+      backgroundColor: palette.danger,
+    },
+    success: {
+      backgroundColor: palette.success,
+    },
   };
 
-  const textClasses: Record<ButtonVariant, string> = {
-    primary: 'text-on-accent dark:text-on-accent-dark text-body-strong',
-    secondary: 'text-ink dark:text-ink-dark text-body-strong',
-    outline: 'text-ink dark:text-ink-dark text-body-strong',
-    ghost: 'text-accent dark:text-accent-dark text-caption font-semibold',
-    danger: 'text-on-accent dark:text-on-accent-dark text-body-strong',
-    success: 'text-on-accent dark:text-on-accent-dark text-body-strong',
+  const variantTextStyles: Record<ButtonVariant, TextStyle> = {
+    primary: {
+      color: palette.onAccent,
+      fontSize: 16,
+      lineHeight: 24,
+      fontWeight: '600',
+    },
+    secondary: {
+      color: palette.ink,
+      fontSize: 16,
+      lineHeight: 24,
+      fontWeight: '600',
+    },
+    outline: {
+      color: palette.ink,
+      fontSize: 16,
+      lineHeight: 24,
+      fontWeight: '600',
+    },
+    ghost: {
+      color: palette.accent,
+      fontSize: 14,
+      lineHeight: 20,
+      fontWeight: '600',
+    },
+    danger: {
+      color: '#FFFFFF',
+      fontSize: 16,
+      lineHeight: 24,
+      fontWeight: '600',
+    },
+    success: {
+      color: '#FFFFFF',
+      fontSize: 16,
+      lineHeight: 24,
+      fontWeight: '600',
+    },
   };
+
+  const isFlex1 = className.includes('flex-1');
 
   return (
-    <AnimatedPressable
-      onPress={disabled ? undefined : onPress}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-      disabled={disabled}
-      accessibilityRole={accessibilityRole}
-      accessibilityLabel={accessibilityLabel ?? label}
-      accessibilityState={{ disabled }}
-      hitSlop={size === 'sm' ? { top: 6, bottom: 6, left: 6, right: 6 } : undefined}
-      style={[animatedStyle, style]}
-      className={`flex-row items-center justify-center ${sizeClasses[size]} ${variantClasses[variant]} ${
-        fullWidth ? 'w-full' : ''
-      } ${className}`}>
-      {leftIcon ? <View className="mr-2">{leftIcon}</View> : null}
-      <Text className={textClasses[variant]} numberOfLines={1}>
-        {label}
-      </Text>
-    </AnimatedPressable>
+    <Animated.View
+      style={[
+        isFlex1 ? { flex: 1 } : undefined,
+        fullWidth ? { width: '100%' } : undefined,
+        animatedStyle,
+        style,
+      ]}
+      className={className}>
+      <Pressable
+        onPress={disabled ? undefined : onPress}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
+        disabled={disabled}
+        accessibilityRole={accessibilityRole}
+        accessibilityLabel={accessibilityLabel ?? label}
+        accessibilityState={{ disabled }}
+        hitSlop={size === 'sm' ? { top: 6, bottom: 6, left: 6, right: 6 } : undefined}
+        style={[
+          {
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: fullWidth || isFlex1 ? '100%' : undefined,
+          },
+          sizeStyles[size],
+          variantContainerStyles[variant],
+        ]}>
+        {leftIcon ? <View style={{ marginRight: 8 }}>{leftIcon}</View> : null}
+        <Text style={variantTextStyles[variant]} numberOfLines={1}>
+          {label}
+        </Text>
+      </Pressable>
+    </Animated.View>
   );
 }
