@@ -25,17 +25,23 @@ textarea:focus-visible {
   box-shadow: none !important;
 }
 
-/* 全局丝滑主题切换过渡（Web 平台） */
+/* 全局丝滑主题切换动效（Web 平台） */
 @media (prefers-reduced-motion: no-preference) {
-  html,
-  body,
-  #root,
-  div,
-  span,
-  p,
-  a {
-    transition-property: background-color, border-color;
-    transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
-    transition-duration: 300ms;
+  /* 原生 View Transition 交叉淡入淡出动画 */
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation-duration: 250ms;
+    animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+  }
+
+  /* 切换时平滑渐变背景色、边框与文本色，避免硬切与局部脱节，且不影响日常滚动性能 */
+  html.theme-transitioning,
+  html.theme-transitioning *,
+  html.theme-transitioning *::before,
+  html.theme-transitioning *::after {
+    transition: background-color 260ms cubic-bezier(0.25, 0.1, 0.25, 1),
+                border-color 260ms cubic-bezier(0.25, 0.1, 0.25, 1),
+                color 260ms cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+    transition-delay: 0s !important;
   }
 }

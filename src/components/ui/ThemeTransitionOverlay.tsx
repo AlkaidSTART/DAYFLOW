@@ -1,76 +1,46 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { StyleSheet } from 'react-native';
-import Animated, {
-  Easing,
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from 'react-native-reanimated';
-
-import { useResolvedTheme } from '@/hooks/use-resolved-theme';
+import { Platform } from 'react-native';
 
 /**
- * 全局主题平滑过渡层
- * 切换主题模式或配色方案时，无缝交叉淡出，消除硬切换闪烁
+ * 执行平滑主题切换的统一调度器
+ * - 在 Web 端：如果支持原生 View Transitions API，触发系统级硬件加速平滑交叉淡出（0 卡顿、0 遮挡）；
+ *   若不支持，则动态附加 theme-transitioning 类名，实现 260ms 平滑渐变。
+ * - 在 Native 端（iOS / Android）：即时响应更新，无阻塞、无卡顿、无遮挡。
  */
-export function ThemeTransitionOverlay() {
-  const { palette, colorSchemeId, theme } = useResolvedTheme();
-  const themeKey = `${colorSchemeId}-${theme}`;
-
-  const lastKeyRef = useRef(themeKey);
-  const lastCanvasRef = useRef(palette.canvas);
-
-  const [overlayColor, setOverlayColor] = useState<string | null>(null);
-  const opacity = useSharedValue(0);
-
-  useEffect(() => {
-    // 首次挂载时不执行过渡
-    if (lastKeyRef.current !== themeKey) {
-      const prevCanvas = lastCanvasRef.current;
-      setOverlayColor(prevCanvas);
-
-      // 从 1 平滑衰减到 0，露出下方新主题
-      opacity.value = 1;
-      opacity.value = withTiming(
-        0,
-        {
-          duration: 340,
-          easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-        },
-        (finished) => {
-          if (finished) {
-            runOnJS(setOverlayColor)(null);
-          }
-        }
-      );
-
-      lastKeyRef.current = themeKey;
-      lastCanvasRef.current = palette.canvas;
-    } else {
-      lastCanvasRef.current = palette.canvas;
+export function executeThemeTransition(updateFn: () => void) {
+  if (Platform.OS === 'web' && typeof document !== 'undefined') {
+    const doc = document as any;
+    if (typeof doc.startViewTransition === 'function') {
+      try {
+        doc.startViewTransition(() => {
+          updateFn();
+        });
+        return;
+      } catch {
+        // 遇到异常降级处理
+      }
     }
-  }, [themeKey, palette.canvas, opacity]);
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
-  }));
-
-  if (!overlayColor) {
-    return null;
+    try {
+      const root = document.documentElement;
+      root.classList.add('theme-transitioning');
+      updateFn();
+      setTimeout(() => {
+        root.classList.remove('theme-transitioning');
+      }, 320);
+      return;
+    } catch {
+      // 降级处理
+    }
   }
 
-  return (
-    <Animated.View
-      pointerEvents="none"
-      style={[
-        StyleSheet.absoluteFill,
-        {
-          backgroundColor: overlayColor,
-          zIndex: 9999,
-        },
-        animatedStyle,
-      ]}
-    />
-  );
+  // 原生移动端：同步即时触发，消除任何全屏遮罩造成的卡顿感
+  updateFn();
+}
+
+/**
+ * 全局主题平滑过渡层占位
+ * 保证向下兼容，不再使用纯色遮罩覆盖全屏，避免造成白屏/黑屏闪烁与卡顿
+ */
+export function ThemeTransitionOverlay() {
+  return null;
 }
