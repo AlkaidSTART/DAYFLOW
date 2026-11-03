@@ -87,7 +87,7 @@ jobs:
           DAYFLOW_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           DAYFLOW_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           GRADLE_OPTS: -Xmx4g
-        run: ./gradlew assembleRelease --no-daemon
+        run: ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,armeabi-v7a
 
       - name: Verify APK signature
         run: |
