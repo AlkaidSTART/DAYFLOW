@@ -1,6 +1,13 @@
+import { Appearance } from 'react-native';
 import { create } from 'zustand';
 
-import { ColorSchemeId, DEFAULT_COLOR_SCHEME_ID } from '@/theme/tokens';
+import {
+  ColorSchemeId,
+  ColorSchemes,
+  DEFAULT_COLOR_SCHEME_ID,
+  ResolvedTheme,
+  syncThemeCssVariables,
+} from '@/theme/tokens';
 
 export type ThemePreference = 'light' | 'dark' | 'system';
 export type { ColorSchemeId };
@@ -15,6 +22,7 @@ export type SnackbarPayload = {
 export type SettingsState = {
   themePreference: ThemePreference;
   colorSchemeId: ColorSchemeId;
+  systemTheme: ResolvedTheme;
   focusMinutes: number;
   shortBreakMinutes: number;
   longBreakMinutes: number;
@@ -27,6 +35,7 @@ export type SettingsState = {
 
   setThemePreference: (theme: ThemePreference) => void;
   setColorSchemeId: (colorSchemeId: ColorSchemeId) => void;
+  setSystemTheme: (systemTheme: ResolvedTheme) => void;
   setFocusDuration: (
     field: 'focusMinutes' | 'shortBreakMinutes' | 'longBreakMinutes',
     minutes: number,
@@ -40,9 +49,32 @@ export type SettingsState = {
   hideSnackbar: () => void;
 };
 
-export const useSettingsStore = create<SettingsState>((set) => ({
+function resolveActiveTheme(
+  preference: ThemePreference,
+  systemTheme: ResolvedTheme,
+): ResolvedTheme {
+  if (preference === 'dark') return 'dark';
+  if (preference === 'light') return 'light';
+  return systemTheme;
+}
+
+function applyThemeVariables(
+  preference: ThemePreference,
+  colorSchemeId: ColorSchemeId,
+  systemTheme: ResolvedTheme,
+) {
+  const resolved = resolveActiveTheme(preference, systemTheme);
+  const scheme = ColorSchemes[colorSchemeId] ?? ColorSchemes[DEFAULT_COLOR_SCHEME_ID];
+  syncThemeCssVariables(scheme[resolved], resolved === 'dark');
+}
+
+const initialSystemTheme: ResolvedTheme =
+  Appearance.getColorScheme() === 'dark' ? 'dark' : 'light';
+
+export const useSettingsStore = create<SettingsState>((set, get) => ({
   themePreference: 'system',
   colorSchemeId: DEFAULT_COLOR_SCHEME_ID,
+  systemTheme: initialSystemTheme,
   focusMinutes: 25,
   shortBreakMinutes: 5,
   longBreakMinutes: 15,
@@ -53,8 +85,21 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   monthStartDay: 1,
   snackbar: null,
 
-  setThemePreference: (themePreference) => set({ themePreference }),
-  setColorSchemeId: (colorSchemeId) => set({ colorSchemeId }),
+  setThemePreference: (themePreference) => {
+    const { colorSchemeId, systemTheme } = get();
+    applyThemeVariables(themePreference, colorSchemeId, systemTheme);
+    set({ themePreference });
+  },
+  setColorSchemeId: (colorSchemeId) => {
+    const { themePreference, systemTheme } = get();
+    applyThemeVariables(themePreference, colorSchemeId, systemTheme);
+    set({ colorSchemeId });
+  },
+  setSystemTheme: (systemTheme) => {
+    const { themePreference, colorSchemeId } = get();
+    applyThemeVariables(themePreference, colorSchemeId, systemTheme);
+    set({ systemTheme });
+  },
   setFocusDuration: (field, minutes) => set({ [field]: minutes }),
   setKeepScreenAwake: (keepScreenAwake) => set({ keepScreenAwake }),
   setHapticEnabled: (hapticEnabled) => set({ hapticEnabled }),

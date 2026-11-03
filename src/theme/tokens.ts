@@ -1,3 +1,4 @@
+import * as SystemUI from 'expo-system-ui';
 import { Platform, TextStyle, ViewStyle } from 'react-native';
 
 export type ResolvedTheme = 'light' | 'dark';
@@ -31,9 +32,6 @@ export interface ThemePalette {
 
 export interface ColorSchemeItem {
   id: ColorSchemeId;
-  name: string;
-  tagline: string;
-  description: string;
   accentColor: string;
   previewColors: {
     canvas: string;
@@ -51,9 +49,6 @@ export interface ColorSchemeItem {
 export const ColorSchemes: Record<ColorSchemeId, ColorSchemeItem> = {
   'chatgpt-emerald': {
     id: 'chatgpt-emerald',
-    name: 'ChatGPT 经典绿',
-    tagline: 'OpenAI 标志翠绿',
-    description: '极简明快的冷灰白底，搭配 ChatGPT 经典的标志性翠绿，现代、纯粹与高效',
     accentColor: '#10A37F',
     previewColors: {
       canvas: '#F7F7F8',
@@ -120,9 +115,6 @@ export const ColorSchemes: Record<ColorSchemeId, ColorSchemeItem> = {
 
   'warm-clay': {
     id: 'warm-clay',
-    name: '晨曦暖陶',
-    tagline: 'DAYFLOW 经典原色',
-    description: '米白温润的纸质手账触感，晨曦自然光下的暖陶橙，治愈而不刺眼',
     accentColor: '#A8482A',
     previewColors: {
       canvas: '#FAF7F2',
@@ -189,9 +181,6 @@ export const ColorSchemes: Record<ColorSchemeId, ColorSchemeItem> = {
 
   'chatgpt-monochrome': {
     id: 'chatgpt-monochrome',
-    name: '极简黑白',
-    tagline: '纯粹中性黑白',
-    description: '摒弃色彩喧嚣的高对比极简设计，沉静理性的灰白与深邃石墨黑',
     accentColor: '#18181B',
     previewColors: {
       canvas: '#F9FAFB',
@@ -258,9 +247,6 @@ export const ColorSchemes: Record<ColorSchemeId, ColorSchemeItem> = {
 
   'ocean-breeze': {
     id: 'ocean-breeze',
-    name: '静谧蔚蓝',
-    tagline: '科技深蓝与海风',
-    description: '如开阔海洋般冷静理智，帮助集中思绪，沉稳而有穿透力',
     accentColor: '#0284C7',
     previewColors: {
       canvas: '#F5F7FA',
@@ -327,9 +313,6 @@ export const ColorSchemes: Record<ColorSchemeId, ColorSchemeItem> = {
 
   'sage-forest': {
     id: 'sage-forest',
-    name: '鼠尾草绿',
-    tagline: '低饱和温和森系',
-    description: '莫兰迪草木色系，柔和舒适减少视觉疲劳，给每日专注带来松弛感',
     accentColor: '#38734C',
     previewColors: {
       canvas: '#F4F6F3',
@@ -396,9 +379,6 @@ export const ColorSchemes: Record<ColorSchemeId, ColorSchemeItem> = {
 
   'iris-violet': {
     id: 'iris-violet',
-    name: '暮夜鸢尾',
-    tagline: '未来感灵动紫罗兰',
-    description: '优雅迷人的紫罗兰与暗夜星芒，点亮直觉思考与无限灵感',
     accentColor: '#6366F1',
     previewColors: {
       canvas: '#F8F7FC',
@@ -465,9 +445,6 @@ export const ColorSchemes: Record<ColorSchemeId, ColorSchemeItem> = {
 
   'amber-glow': {
     id: 'amber-glow',
-    name: '暖阳琥珀',
-    tagline: '温暖明亮的日落金',
-    description: '如落日余晖洒在木质桌面，温暖饱满的金琥珀光芒，充满活力与希望',
     accentColor: '#B45309',
     previewColors: {
       canvas: '#FAF7F2',
@@ -536,6 +513,58 @@ export const ColorSchemes: Record<ColorSchemeId, ColorSchemeItem> = {
 export const COLOR_SCHEMES_LIST = Object.values(ColorSchemes);
 
 export const DEFAULT_COLOR_SCHEME_ID: ColorSchemeId = 'chatgpt-emerald';
+
+/**
+ * 同步将当前主题调色板写入 CSS 变量（兼容 NativeWind 原生 rootVariables 与 Web :root）
+ * 避免通过 Appearance.setColorScheme 触发 Android 原生 Activity 重建导致 200ms+ 卡顿
+ */
+export function syncThemeCssVariables(palette: ThemePalette, isDark: boolean): void {
+  const varsMap: Record<string, string> = {
+    '--color-canvas': palette.canvas,
+    '--color-surface': palette.surface,
+    '--color-surface-muted': palette.surfaceMuted,
+    '--color-surface-selected': palette.surfaceSelected,
+    '--color-line': palette.line,
+    '--color-ink': palette.ink,
+    '--color-ink-muted': palette.inkMuted,
+    '--color-ink-subtle': palette.inkSubtle,
+    '--color-accent': palette.accent,
+    '--color-accent-soft': palette.accentSoft,
+    '--color-on-accent': palette.onAccent,
+    '--color-success': palette.success,
+    '--color-warning': palette.warning,
+    '--color-danger': palette.danger,
+  };
+
+  if (Platform.OS === 'web') {
+    if (typeof document !== 'undefined') {
+      const root = document.documentElement;
+      root.classList.toggle('dark', isDark);
+      for (const [key, val] of Object.entries(varsMap)) {
+        root.style.setProperty(key, val);
+      }
+    }
+    return;
+  }
+
+  try {
+    const cssInteropGlobal = (globalThis as Record<string, any>).__css_interop;
+    const rootVariables: Map<string, { set?: (v: string) => void }> | undefined =
+      cssInteropGlobal?.rootVariables;
+    if (rootVariables && typeof rootVariables.get === 'function') {
+      for (const [key, val] of Object.entries(varsMap)) {
+        const obs = rootVariables.get(key);
+        if (obs && typeof obs.set === 'function') {
+          obs.set(val);
+        }
+      }
+    }
+  } catch {
+    // 忽略降级异常
+  }
+
+  SystemUI.setBackgroundColorAsync(palette.canvas).catch(() => {});
+}
 
 /**
  * 保持对旧代码直接引入 Palette / CategoryChartColors 的兼容

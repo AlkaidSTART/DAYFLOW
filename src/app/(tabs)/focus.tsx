@@ -13,6 +13,7 @@ import { useFocusStore } from '@/features/focus/store/focus-store';
 import { FocusMode } from '@/features/focus/types';
 import { useSettingsStore } from '@/features/settings/store/settings-store';
 import { useTodayStore } from '@/features/today/store/today-store';
+import { useResolvedTheme } from '@/hooks/use-resolved-theme';
 import { triggerHaptic } from '@/lib/haptics';
 import { tabularNumsStyle } from '@/theme/tokens';
 
@@ -23,6 +24,7 @@ import { tabularNumsStyle } from '@/theme/tokens';
  * - 休息模式下整体主色由 accent 切换为 success，但背景不变
  */
 export default function FocusScreen() {
+  const { palette } = useResolvedTheme();
   const mode = useFocusStore((s) => s.mode);
   const phase = useFocusStore((s) => s.phase);
   const lastCompletedMinutes = useFocusStore((s) => s.lastCompletedMinutes);
@@ -156,7 +158,10 @@ export default function FocusScreen() {
   };
 
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-canvas dark:bg-canvas-dark px-6">
+    <SafeAreaView
+      edges={['top']}
+      style={{ backgroundColor: palette.canvas }}
+      className="flex-1 bg-canvas dark:bg-canvas-dark px-6">
       <TabPageTransition routeKey="focus">
         <View className="flex-1 justify-between py-6">
           {/* 顶部：标题 + 模式切换 */}

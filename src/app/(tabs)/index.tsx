@@ -182,7 +182,10 @@ export default function TodayScreen() {
   );
 
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-canvas dark:bg-canvas-dark">
+    <SafeAreaView
+      edges={['top']}
+      style={{ backgroundColor: palette.canvas }}
+      className="flex-1 bg-canvas dark:bg-canvas-dark">
       <TabPageTransition routeKey="today">
         <ScrollView
           showsVerticalScrollIndicator={false}

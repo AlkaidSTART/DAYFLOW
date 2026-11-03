@@ -162,7 +162,10 @@ export default function WalletScreen() {
     : undefined;
 
   return (
-    <SafeAreaView edges={['top']} className="flex-1 bg-canvas dark:bg-canvas-dark">
+    <SafeAreaView
+      edges={['top']}
+      style={{ backgroundColor: palette.canvas }}
+      className="flex-1 bg-canvas dark:bg-canvas-dark">
       <TabPageTransition routeKey="wallet">
         <ScrollView
           showsVerticalScrollIndicator={false}

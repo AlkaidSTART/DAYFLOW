@@ -7,6 +7,21 @@
     -apple-system, BlinkMacSystemFont, 'SF Pro Text', Roboto, ui-sans-serif, system-ui, sans-serif;
   --font-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
+
+  --color-canvas: #F7F7F8;
+  --color-surface: #FFFFFF;
+  --color-surface-muted: #ECECF1;
+  --color-surface-selected: #E3E5E8;
+  --color-line: #E5E7EB;
+  --color-ink: #0D0D0D;
+  --color-ink-muted: #5D5D68;
+  --color-ink-subtle: #8E8EA0;
+  --color-accent: #10A37F;
+  --color-accent-soft: #E6F7F2;
+  --color-on-accent: #FFFFFF;
+  --color-success: #10A37F;
+  --color-warning: #D97706;
+  --color-danger: #DC2626;
 }
 
 input,
@@ -23,25 +38,4 @@ input:focus-visible,
 textarea:focus-visible {
   outline: none !important;
   box-shadow: none !important;
-}
-
-/* 全局丝滑主题切换动效（Web 平台） */
-@media (prefers-reduced-motion: no-preference) {
-  /* 原生 View Transition 交叉淡入淡出动画 */
-  ::view-transition-old(root),
-  ::view-transition-new(root) {
-    animation-duration: 250ms;
-    animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
-  }
-
-  /* 切换时平滑渐变背景色、边框与文本色，避免硬切与局部脱节，且不影响日常滚动性能 */
-  html.theme-transitioning,
-  html.theme-transitioning *,
-  html.theme-transitioning *::before,
-  html.theme-transitioning *::after {
-    transition: background-color 260ms cubic-bezier(0.25, 0.1, 0.25, 1),
-                border-color 260ms cubic-bezier(0.25, 0.1, 0.25, 1),
-                color 260ms cubic-bezier(0.25, 0.1, 0.25, 1) !important;
-    transition-delay: 0s !important;
-  }
 }

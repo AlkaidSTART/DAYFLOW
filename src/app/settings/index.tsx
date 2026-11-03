@@ -1,7 +1,15 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Switch, Text, View } from 'react-native';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+  withTiming,
+} from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button } from '@/components/ui/Button';
@@ -19,17 +27,11 @@ import { useWalletStore } from '@/features/wallet/store/wallet-store';
 import { useResolvedTheme } from '@/hooks/use-resolved-theme';
 import { triggerHaptic } from '@/lib/haptics';
 import { formatVersionTag } from '@/lib/version';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
 import {
   ColorSchemeItem,
   COLOR_SCHEMES_LIST,
   getCardSurfaceStyle,
   tabularNumsStyle,
-  ThemePalette,
 } from '@/theme/tokens';
 
 const THEME_OPTIONS: SegmentOption<ThemePreference>[] = [
@@ -93,6 +95,36 @@ export default function SettingsScreen() {
   const [restoreConfirmVisible, setRestoreConfirmVisible] = useState(false);
   const [licenseSheetVisible, setLicenseSheetVisible] = useState(false);
 
+  const appearanceCardScale = useSharedValue(1);
+  const themeIconRotate = useSharedValue(0);
+  const themeIconScale = useSharedValue(1);
+
+  const appearanceCardAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: appearanceCardScale.value }],
+  }));
+
+  const themeIconAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { rotate: `${themeIconRotate.value}deg` },
+      { scale: themeIconScale.value },
+    ],
+  }));
+
+  const triggerAppearancePulse = (animateIcon = false) => {
+    appearanceCardScale.value = withSequence(
+      withTiming(0.99, { duration: 65, easing: Easing.out(Easing.quad) }),
+      withSpring(1, { damping: 18, stiffness: 360 }),
+    );
+    if (animateIcon) {
+      themeIconRotate.value = -25;
+      themeIconRotate.value = withSpring(0, { damping: 14, stiffness: 320 });
+      themeIconScale.value = withSequence(
+        withTiming(0.82, { duration: 60, easing: Easing.out(Easing.quad) }),
+        withSpring(1, { damping: 14, stiffness: 360 }),
+      );
+    }
+  };
+
   const handleCheckUpdatePress = async () => {
     triggerHaptic('selection', hapticEnabled);
     if (isOutdated && remoteInfo) {
@@ -136,7 +168,10 @@ export default function SettingsScreen() {
   };
 
   return (
-    <SafeAreaView edges={['top', 'bottom']} className="flex-1 bg-canvas dark:bg-canvas-dark">
+    <SafeAreaView
+      edges={['top', 'bottom']}
+      style={{ backgroundColor: palette.canvas }}
+      className="flex-1 bg-canvas dark:bg-canvas-dark">
       {/* 顶部返回导航栏 */}
       <View className="px-6 pt-3 pb-4 flex-row items-center border-b border-line dark:border-line-dark">
         <Pressable
@@ -160,16 +195,40 @@ export default function SettingsScreen() {
             <Text className="text-caption font-semibold text-ink-muted dark:text-ink-muted-dark mb-3">
               1. 外观
             </Text>
-            <View style={getCardSurfaceStyle(theme, palette)} className="rounded-lg p-4 gap-5">
+            <Animated.View
+              style={[getCardSurfaceStyle(theme, palette), appearanceCardAnimatedStyle]}
+              className="rounded-lg p-4 gap-5">
               <View>
-                <Text className="text-body-strong text-ink dark:text-ink-dark mb-3">
-                  主题模式
-                </Text>
+                <View className="flex-row items-center justify-between mb-3">
+                  <Text className="text-body-strong text-ink dark:text-ink-dark">
+                    主题模式
+                  </Text>
+                  <Animated.View
+                    style={[
+                      { backgroundColor: palette.accentSoft },
+                      styles.themeBadge,
+                      themeIconAnimatedStyle,
+                    ]}>
+                    <Ionicons
+                      name={
+                        themePreference === 'dark'
+                          ? 'moon'
+                          : themePreference === 'light'
+                            ? 'sunny'
+                            : 'contrast'
+                      }
+                      size={15}
+                      color={palette.accent}
+                    />
+                  </Animated.View>
+                </View>
                 <SegmentedControl
                   options={THEME_OPTIONS}
                   value={themePreference}
                   onChange={(val) => {
+                    if (val === themePreference) return;
                     triggerHaptic('selection', hapticEnabled);
+                    triggerAppearancePulse(true);
                     executeThemeTransition(() => {
                       setThemePreference(val);
                     });
@@ -178,25 +237,23 @@ export default function SettingsScreen() {
               </View>
 
               <View className="pt-3 border-t border-line dark:border-line-dark">
-                <View className="flex-row items-center justify-between mb-3">
-                  <Text className="text-body-strong text-ink dark:text-ink-dark">
-                    配色方案
-                  </Text>
-                </View>
+                <Text className="text-body-strong text-ink dark:text-ink-dark mb-3">
+                  配色方案
+                </Text>
 
-                <View className="gap-2">
+                <View style={styles.swatchRow}>
                   {COLOR_SCHEMES_LIST.map((scheme) => {
                     const isSelected = colorSchemeId === scheme.id;
 
                     return (
-                      <ColorSchemeOptionCard
+                      <ColorSchemeSwatch
                         key={scheme.id}
                         scheme={scheme}
                         isSelected={isSelected}
-                        palette={palette}
                         onSelect={() => {
                           if (!isSelected) {
                             triggerHaptic('selection', hapticEnabled);
+                            triggerAppearancePulse(false);
                             executeThemeTransition(() => {
                               setColorSchemeId(scheme.id);
                             });
@@ -207,7 +264,7 @@ export default function SettingsScreen() {
                   })}
                 </View>
               </View>
-            </View>
+            </Animated.View>
           </View>
 
           {/* 2. 专注 */}
@@ -754,94 +811,128 @@ export default function SettingsScreen() {
   );
 }
 
-function ColorSchemeOptionCard({
+const ColorSchemeSwatch = React.memo(function ColorSchemeSwatch({
   scheme,
   isSelected,
-  palette,
   onSelect,
 }: {
   scheme: ColorSchemeItem;
   isSelected: boolean;
-  palette: ThemePalette;
   onSelect: () => void;
 }) {
-  const scale = useSharedValue(1);
+  const pressScale = useSharedValue(1);
+  const selectedProgress = useSharedValue(isSelected ? 1 : 0);
+
+  useEffect(() => {
+    selectedProgress.value = withSpring(isSelected ? 1 : 0, {
+      damping: 16,
+      stiffness: 380,
+      mass: 0.6,
+    });
+  }, [isSelected, selectedProgress]);
 
   const handlePressIn = () => {
-    scale.value = withSpring(0.985, { damping: 15, stiffness: 350 });
+    pressScale.value = withTiming(0.86, {
+      duration: 65,
+      easing: Easing.out(Easing.quad),
+    });
   };
 
   const handlePressOut = () => {
-    scale.value = withSpring(1, { damping: 15, stiffness: 350 });
+    pressScale.value = withSpring(1, {
+      damping: 14,
+      stiffness: 360,
+    });
   };
 
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+  const containerAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pressScale.value }],
   }));
 
-  const preview = scheme.previewColors;
+  const ringAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: selectedProgress.value,
+    transform: [{ scale: 0.84 + selectedProgress.value * 0.16 }],
+  }));
+
+  const checkAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: selectedProgress.value,
+    transform: [{ scale: 0.4 + selectedProgress.value * 0.6 }],
+  }));
 
   return (
-    <Animated.View style={animatedStyle}>
+    <Animated.View style={containerAnimatedStyle}>
       <Pressable
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         onPress={onSelect}
+        hitSlop={6}
         accessibilityRole="radio"
         accessibilityState={{ checked: isSelected }}
-        accessibilityLabel={`${scheme.name}配色`}
-        style={[
-          {
-            backgroundColor: isSelected
-              ? palette.accentSoft
-              : palette.surfaceMuted,
-            borderColor: isSelected
-              ? scheme.accentColor
-              : 'transparent',
-            borderWidth: 1.5,
-          },
-        ]}
-        className="rounded-md py-2.5 px-3 flex-row items-center justify-between">
-        {/* 左侧：色彩预览指示与名称 */}
-        <View className="flex-row items-center flex-1 mr-2">
-          <View
-            style={{
-              backgroundColor: preview.canvas,
+        accessibilityLabel={scheme.id}
+        style={styles.swatchTouch}>
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.swatchRing,
+            {
               borderColor: scheme.accentColor,
-            }}
-            className="w-7 h-7 rounded-full border items-center justify-center mr-3 overflow-hidden shadow-xs">
-            <View
-              style={{ backgroundColor: scheme.accentColor }}
-              className="w-3.5 h-3.5 rounded-full"
-            />
-          </View>
-
-          <Text
-            style={{
-              color: palette.ink,
-              fontWeight: isSelected ? '600' : '500',
-            }}
-            className="text-body">
-            {scheme.name}
-          </Text>
-        </View>
-
-        {/* 右侧选中状态指示 */}
-        <View className="items-center justify-center pl-1">
-          {isSelected ? (
-            <Ionicons
-              name="checkmark-circle"
-              size={22}
-              color={scheme.accentColor}
-            />
-          ) : (
-            <View
-              style={{ borderColor: palette.line }}
-              className="w-5 h-5 rounded-full border"
-            />
-          )}
+              backgroundColor: scheme.light.accentSoft,
+            },
+            ringAnimatedStyle,
+          ]}
+        />
+        <View
+          style={[
+            styles.swatchCircle,
+            {
+              backgroundColor: scheme.accentColor,
+            },
+          ]}>
+          <Animated.View style={checkAnimatedStyle}>
+            <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+          </Animated.View>
         </View>
       </Pressable>
     </Animated.View>
   );
-}
+});
+
+const styles = StyleSheet.create({
+  themeBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  swatchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 2,
+  },
+  swatchTouch: {
+    width: 42,
+    height: 42,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  swatchRing: {
+    position: 'absolute',
+    width: 42,
+    height: 42,
+    borderRadius: 999,
+    borderWidth: 2,
+  },
+  swatchCircle: {
+    width: 30,
+    height: 30,
+    borderRadius: 999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(128, 128, 128, 0.22)',
+  },
+});

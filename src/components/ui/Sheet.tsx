@@ -12,11 +12,13 @@ import {
   StyleSheet,
   Text,
   View,
+  ViewStyle,
 } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
   useSharedValue,
+  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -33,10 +35,10 @@ export type SheetProps = {
 };
 
 /**
- * Section 6.11 & 8.2: 底部弹层（Sheet - Native 移动端）
+ * Section 6.11 & 8.2: 底部弹层（Sheet - 基于 React Native Reanimated 跨平台统一实现）
  * - 顶部圆角 xl (28px)，背景 surface（实色不透明），拖拽指示条 36×4 line（支持触摸下滑关闭）
  * - 遮罩 rgba(28, 25, 23, 0.35) (200ms easeOut)
- * - 弹层入场 280ms cubic-bezier(0.32, 0.72, 0, 1)，从底部向上滑出
+ * - 弹层入场/退场由 Reanimated 硬件加速驱动
  * - 最大高度 85%，内容超出可滚动
  */
 export function Sheet({ visible, onClose, title, children }: SheetProps) {
@@ -44,10 +46,15 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
   const { palette } = useResolvedTheme();
   const { haptic } = useHaptic();
 
+  const [mounted, setMounted] = useState(visible);
   const translateY = useSharedValue(480);
   const backdropOpacity = useSharedValue(0);
   const dragStartY = useSharedValue(0);
   const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  if (visible && !mounted) {
+    setMounted(true);
+  }
 
   useEffect(() => {
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
@@ -70,25 +77,39 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
   useEffect(() => {
     if (visible) {
       backdropOpacity.value = withTiming(1, {
-        duration: 200,
+        duration: 180,
         easing: Easing.out(Easing.quad),
       });
-      translateY.value = withTiming(0, {
-        duration: 280,
-        easing: Easing.bezier(0.32, 0.72, 0, 1),
+      translateY.value = withSpring(0, {
+        damping: 26,
+        stiffness: 320,
+        mass: 0.8,
       });
-    } else {
-      backdropOpacity.value = 0;
-      translateY.value = 480;
+      return;
     }
+
+    backdropOpacity.value = withTiming(0, {
+      duration: 160,
+      easing: Easing.in(Easing.quad),
+    });
+    translateY.value = withTiming(480, {
+      duration: 180,
+      easing: Easing.in(Easing.cubic),
+    });
+
+    const timer = setTimeout(() => {
+      setMounted(false);
+    }, 185);
+
+    return () => clearTimeout(timer);
   }, [visible, backdropOpacity, translateY]);
 
-  const handleNativeTouchStart = (e: GestureResponderEvent) => {
+  const handleTouchStart = (e: GestureResponderEvent) => {
     const touch = e.nativeEvent.touches?.[0] ?? e.nativeEvent;
     dragStartY.value = touch.pageY ?? 0;
   };
 
-  const handleNativeTouchMove = (e: GestureResponderEvent) => {
+  const handleTouchMove = (e: GestureResponderEvent) => {
     const touch = e.nativeEvent.touches?.[0] ?? e.nativeEvent;
     const dy = (touch.pageY ?? 0) - dragStartY.value;
     if (dy > 0) {
@@ -96,16 +117,16 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
     }
   };
 
-  const handleNativeTouchEnd = (e: GestureResponderEvent) => {
+  const handleTouchEnd = (e: GestureResponderEvent) => {
     const touch = e.nativeEvent.changedTouches?.[0] ?? e.nativeEvent;
     const dy = (touch.pageY ?? 0) - dragStartY.value;
     if (dy > 72) {
       haptic('selection');
       onClose();
     } else {
-      translateY.value = withTiming(0, {
-        duration: 200,
-        easing: Easing.out(Easing.cubic),
+      translateY.value = withSpring(0, {
+        damping: 24,
+        stiffness: 340,
       });
     }
   };
@@ -118,7 +139,7 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
     transform: [{ translateY: translateY.value }],
   }));
 
-  if (!visible) return null;
+  if (!mounted && !visible) return null;
 
   const windowHeight = Dimensions.get('window').height;
   const dynamicMaxHeight =
@@ -128,7 +149,7 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
 
   return (
     <Modal
-      visible={visible}
+      visible={mounted || visible}
       transparent
       animationType="none"
       statusBarTranslucent
@@ -176,11 +197,18 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
             sheetStyle,
           ]}>
           {/* 36×4 拖拽指示条 */}
-          <View
-            onTouchStart={handleNativeTouchStart}
-            onTouchMove={handleNativeTouchMove}
-            onTouchEnd={handleNativeTouchEnd}
-            accessible={false}
+          <Pressable
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onPress={() => {
+              if (Platform.OS === 'web') {
+                haptic('selection');
+                onClose();
+              }
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="下滑或点击收起弹窗"
             style={styles.handleWrapper}>
             <View
               style={[
@@ -188,7 +216,7 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
                 { backgroundColor: palette.line },
               ]}
             />
-          </View>
+          </Pressable>
 
           {title ? (
             <View style={styles.headerRow}>
@@ -252,6 +280,9 @@ const styles = StyleSheet.create({
       android: {
         elevation: 16,
       },
+      web: {
+        boxShadow: '0px -8px 28px rgba(28, 25, 23, 0.16)',
+      } as unknown as ViewStyle,
     }),
   },
   handleWrapper: {

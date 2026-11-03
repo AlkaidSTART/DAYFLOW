@@ -1,6 +1,4 @@
-import { useColorScheme as useNativeWindColorScheme } from 'nativewind';
 import { useMemo } from 'react';
-import { useColorScheme as useRNColorScheme } from 'react-native';
 
 import { useSettingsStore } from '@/features/settings/store/settings-store';
 import {
@@ -21,20 +19,41 @@ export interface UseResolvedThemeResult {
   chartColors: readonly string[];
 }
 
+export function getResolvedThemeSnapshot(): UseResolvedThemeResult {
+  const { themePreference, colorSchemeId, systemTheme } = useSettingsStore.getState();
+  const resolved: ResolvedTheme =
+    themePreference === 'dark'
+      ? 'dark'
+      : themePreference === 'light'
+        ? 'light'
+        : systemTheme;
+
+  const currentScheme =
+    ColorSchemes[colorSchemeId] ?? ColorSchemes[DEFAULT_COLOR_SCHEME_ID];
+  const palette = currentScheme[resolved];
+  const chartColors = currentScheme.chartColors[resolved];
+
+  return {
+    theme: resolved,
+    isDark: resolved === 'dark',
+    palette,
+    colorSchemeId: currentScheme.id,
+    colorScheme: currentScheme,
+    chartColors,
+  };
+}
+
 export function useResolvedTheme(): UseResolvedThemeResult {
   const preference = useSettingsStore((s) => s.themePreference);
   const colorSchemeId = useSettingsStore((s) => s.colorSchemeId);
-  const systemScheme = useRNColorScheme();
-  const { colorScheme: nwScheme } = useNativeWindColorScheme();
+  const systemTheme = useSettingsStore((s) => s.systemTheme);
 
-  let resolved: ResolvedTheme = 'light';
-  if (preference === 'dark') {
-    resolved = 'dark';
-  } else if (preference === 'light') {
-    resolved = 'light';
-  } else {
-    resolved = (nwScheme ?? systemScheme) === 'dark' ? 'dark' : 'light';
-  }
+  const resolved: ResolvedTheme =
+    preference === 'dark'
+      ? 'dark'
+      : preference === 'light'
+        ? 'light'
+        : systemTheme;
 
   const currentScheme =
     ColorSchemes[colorSchemeId] ?? ColorSchemes[DEFAULT_COLOR_SCHEME_ID];

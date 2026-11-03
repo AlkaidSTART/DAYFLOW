@@ -5,22 +5,40 @@ module.exports = {
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
-      // 暗色值通过 dark: 变体使用，例如 bg-canvas dark:bg-canvas-dark
+      // 颜色变量由主题系统同步驱动，兼顾浅色/深色模式与多套配色方案单帧瞬时切换
       colors: {
-        canvas: { DEFAULT: '#FAF7F2', dark: '#16130F' },
-        surface: { DEFAULT: '#FFFFFF', dark: '#201C17' },
-        'surface-muted': { DEFAULT: '#F2ECE4', dark: '#2A251E' },
-        'surface-selected': { DEFAULT: '#E8DFD3', dark: '#342D25' },
-        line: { DEFAULT: '#E5DCD0', dark: '#3A332A' },
-        ink: { DEFAULT: '#1C1917', dark: '#F5F0E8' },
-        'ink-muted': { DEFAULT: '#6B6259', dark: '#B3A99C' },
-        'ink-subtle': { DEFAULT: '#78706A', dark: '#9A9083' },
-        accent: { DEFAULT: '#A8482A', dark: '#E89B7A' },
-        'accent-soft': { DEFAULT: '#F6E3D9', dark: '#3A241B' },
-        'on-accent': { DEFAULT: '#FFFFFF', dark: '#1C1917' },
-        success: { DEFAULT: '#3F7A55', dark: '#7FB894' },
-        warning: { DEFAULT: '#8A5A05', dark: '#D9A441' },
-        danger: { DEFAULT: '#B3261E', dark: '#F2867D' },
+        canvas: { DEFAULT: 'var(--color-canvas)', dark: 'var(--color-canvas)' },
+        surface: { DEFAULT: 'var(--color-surface)', dark: 'var(--color-surface)' },
+        'surface-muted': {
+          DEFAULT: 'var(--color-surface-muted)',
+          dark: 'var(--color-surface-muted)',
+        },
+        'surface-selected': {
+          DEFAULT: 'var(--color-surface-selected)',
+          dark: 'var(--color-surface-selected)',
+        },
+        line: { DEFAULT: 'var(--color-line)', dark: 'var(--color-line)' },
+        ink: { DEFAULT: 'var(--color-ink)', dark: 'var(--color-ink)' },
+        'ink-muted': {
+          DEFAULT: 'var(--color-ink-muted)',
+          dark: 'var(--color-ink-muted)',
+        },
+        'ink-subtle': {
+          DEFAULT: 'var(--color-ink-subtle)',
+          dark: 'var(--color-ink-subtle)',
+        },
+        accent: { DEFAULT: 'var(--color-accent)', dark: 'var(--color-accent)' },
+        'accent-soft': {
+          DEFAULT: 'var(--color-accent-soft)',
+          dark: 'var(--color-accent-soft)',
+        },
+        'on-accent': {
+          DEFAULT: 'var(--color-on-accent)',
+          dark: 'var(--color-on-accent)',
+        },
+        success: { DEFAULT: 'var(--color-success)', dark: 'var(--color-success)' },
+        warning: { DEFAULT: 'var(--color-warning)', dark: 'var(--color-warning)' },
+        danger: { DEFAULT: 'var(--color-danger)', dark: 'var(--color-danger)' },
       },
       borderRadius: {
         sm: '8px',
