@@ -317,7 +317,9 @@ export default function TodayScreen() {
                     accessibilityLabel="添加任务"
                     className="min-h-[56px] rounded-lg border border-dashed border-line dark:border-line-dark px-4 py-3 flex-row items-center justify-center mt-1">
                     <Ionicons name="add-circle-outline" size={20} color={palette.accent} />
-                    <Text className="text-body-strong text-accent dark:text-accent-dark ml-2">
+                    <Text
+                      style={{ color: palette.accent }}
+                      className="text-body-strong ml-2">
                       添加任务
                     </Text>
                   </Pressable>

@@ -6,11 +6,13 @@ import Animated, {
   Easing,
   useAnimatedStyle,
   useSharedValue,
+  withSequence,
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useResolvedTheme } from '@/hooks/use-resolved-theme';
+import { useHaptic } from '@/lib/haptics';
 import { RadiusTokens } from '@/theme/tokens';
 
 type TabConfig = {
@@ -52,16 +54,58 @@ const TAB_ITEMS: TabConfig[] = [
 const TAB_GAP = 8;
 const TAB_HEIGHT = 48;
 
+type TabButtonProps = {
+  tab: TabConfig;
+  isFocused: boolean;
+  onPress: () => void;
+  palette: ReturnType<typeof useResolvedTheme>['palette'];
+};
+
+function TabButton({ tab, isFocused, onPress, palette }: TabButtonProps) {
+  const iconScale = useSharedValue(1);
+
+  useEffect(() => {
+    if (isFocused) {
+      iconScale.value = withSequence(
+        withTiming(0.9, { duration: 60, easing: Easing.out(Easing.quad) }),
+        withTiming(1, { duration: 80, easing: Easing.out(Easing.quad) }),
+      );
+    }
+  }, [isFocused, iconScale]);
+
+  const animatedIconStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: iconScale.value }],
+  }));
+
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="tab"
+      accessibilityState={{ selected: isFocused }}
+      accessibilityLabel={tab.label}
+      style={styles.tabItem}>
+      <Animated.View style={[styles.iconWrapper, animatedIconStyle]}>
+        <Ionicons
+          name={isFocused ? tab.iconActive : tab.iconOutline}
+          size={26}
+          color={isFocused ? palette.ink : palette.inkMuted}
+        />
+      </Animated.View>
+    </Pressable>
+  );
+}
+
 /**
  * 底部纯图标全宽导航栏
  * - 三个 Tab 等分铺满整个底部宽度
  * - 纯图标（26px）+ 无障碍标签
- * - 基于 react-native-reanimated 实现跨平台（Android / iOS / Web）原生流畅滑块过渡
- * - 胶囊滑块带有明确的圆角与内边距，动效 180ms cubic-bezier(0.22, 1, 0.36, 1)
+ * - 触觉反馈：切换 Tab 时触发 selection 震动
+ * - 动效升级：140ms 高敏捷贝塞尔曲线，干脆利落到位，图标带有轻弹确认反馈
  */
 function DayflowBottomTabBar() {
   const insets = useSafeAreaInsets();
   const { palette } = useResolvedTheme();
+  const { haptic } = useHaptic();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -72,7 +116,7 @@ function DayflowBottomTabBar() {
     const idx = TAB_ITEMS.findIndex((tab) =>
       tab.matchPath === '/'
         ? pathname === '/' || pathname === '/index'
-        : pathname.startsWith(tab.matchPath)
+        : pathname.startsWith(tab.matchPath),
     );
     return idx >= 0 ? idx : 0;
   }, [pathname]);
@@ -87,7 +131,7 @@ function DayflowBottomTabBar() {
   const translateX = useSharedValue(0);
   const isFirstLayout = useRef(true);
 
-  // 当宽度测量完成或激活项变化时，平滑更新指示器位置
+  // 当宽度测量完成或激活项变化时，干脆果断更新指示器位置
   useEffect(() => {
     if (tabWidth <= 0) return;
     const targetX = activeIndex * (tabWidth + TAB_GAP);
@@ -97,8 +141,8 @@ function DayflowBottomTabBar() {
       isFirstLayout.current = false;
     } else {
       translateX.value = withTiming(targetX, {
-        duration: 180,
-        easing: Easing.bezier(0.22, 1, 0.36, 1),
+        duration: 140,
+        easing: Easing.bezier(0.16, 1, 0.3, 1),
       });
     }
   }, [activeIndex, tabWidth, translateX]);
@@ -144,26 +188,19 @@ function DayflowBottomTabBar() {
 
           const handlePress = () => {
             if (!isFocused) {
+              haptic('selection');
               router.replace(tab.href);
             }
           };
 
           return (
-            <Pressable
+            <TabButton
               key={tab.routeName}
+              tab={tab}
+              isFocused={isFocused}
               onPress={handlePress}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: isFocused }}
-              accessibilityLabel={tab.label}
-              style={styles.tabItem}>
-              <View style={styles.iconWrapper}>
-                <Ionicons
-                  name={isFocused ? tab.iconActive : tab.iconOutline}
-                  size={26}
-                  color={isFocused ? palette.ink : palette.inkMuted}
-                />
-              </View>
-            </Pressable>
+              palette={palette}
+            />
           );
         })}
       </View>
@@ -183,8 +220,8 @@ export default function TabsLayout() {
         transitionSpec: {
           animation: 'timing',
           config: {
-            duration: 220,
-            easing: RNEasing.bezier(0.22, 1, 0.36, 1),
+            duration: 160,
+            easing: RNEasing.bezier(0.16, 1, 0.3, 1),
           },
         },
         sceneStyle: {
@@ -200,13 +237,7 @@ export default function TabsLayout() {
               {
                 translateX: current.progress.interpolate({
                   inputRange: [-1, 0, 1],
-                  outputRange: [-36, 0, 36],
-                }),
-              },
-              {
-                scale: current.progress.interpolate({
-                  inputRange: [-1, 0, 1],
-                  outputRange: [0.98, 1, 0.98],
+                  outputRange: [-16, 0, 16],
                 }),
               },
             ],
