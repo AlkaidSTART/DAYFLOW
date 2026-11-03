@@ -1,7 +1,6 @@
 import '@/global.css';
 
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
+import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme as useNativeWindColorScheme } from 'nativewind';
@@ -66,7 +65,7 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider value={navigationTheme}>
-        <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={palette.canvas} />
+        <StatusBar style={isDark ? 'light' : 'dark'} />
         <View className={`flex-1 bg-canvas dark:bg-canvas-dark ${isDark ? 'dark' : ''}`}>
           <Stack
             screenOptions={{

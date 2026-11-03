@@ -1,6 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { Tabs } from 'expo-router';
+import { Href, Tabs, usePathname, useRouter } from 'expo-router';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -9,6 +8,8 @@ import { useResolvedTheme } from '@/hooks/use-resolved-theme';
 
 type TabConfig = {
   routeName: string;
+  href: Href;
+  matchPath: string;
   label: string;
   iconOutline: keyof typeof Ionicons.glyphMap;
   iconActive: keyof typeof Ionicons.glyphMap;
@@ -17,18 +18,24 @@ type TabConfig = {
 const TAB_ITEMS: TabConfig[] = [
   {
     routeName: 'index',
+    href: '/',
+    matchPath: '/',
     label: 'Today',
     iconOutline: 'sunny-outline',
     iconActive: 'sunny',
   },
   {
     routeName: 'focus',
+    href: '/focus',
+    matchPath: '/focus',
     label: 'Focus',
     iconOutline: 'timer-outline',
     iconActive: 'timer',
   },
   {
     routeName: 'wallet',
+    href: '/wallet',
+    matchPath: '/wallet',
     label: 'Wallet',
     iconOutline: 'wallet-outline',
     iconActive: 'wallet',
@@ -43,9 +50,11 @@ const TAB_ITEMS: TabConfig[] = [
  * - 不使用浮动胶囊 Tab 或自定义大圆角 Tab
  * - 切换 Tab 无触觉反馈（Section 9）
  */
-function DayflowBottomTabBar({ state, navigation }: BottomTabBarProps) {
+function DayflowBottomTabBar() {
   const insets = useSafeAreaInsets();
   const { palette } = useResolvedTheme();
+  const router = useRouter();
+  const pathname = usePathname();
 
   return (
     <View
@@ -53,19 +62,15 @@ function DayflowBottomTabBar({ state, navigation }: BottomTabBarProps) {
         paddingBottom: Math.max(insets.bottom, 8),
       }}
       className="bg-canvas dark:bg-canvas-dark border-t border-line dark:border-line-dark pt-2 px-4 flex-row items-center justify-around">
-      {TAB_ITEMS.map((tab, index) => {
-        const route = state.routes.find((r) => r.name === tab.routeName) ?? state.routes[index];
-        const isFocused = state.index === index;
+      {TAB_ITEMS.map((tab) => {
+        const isFocused =
+          tab.matchPath === '/'
+            ? pathname === '/' || pathname === '/index'
+            : pathname.startsWith(tab.matchPath);
 
         const handlePress = () => {
-          if (!route) return;
-          const event = navigation.emit({
-            type: 'tabPress',
-            target: route.key,
-            canPreventDefault: true,
-          });
-          if (!isFocused && !event.defaultPrevented) {
-            navigation.navigate(route.name);
+          if (!isFocused) {
+            router.replace(tab.href);
           }
         };
 
@@ -107,7 +112,7 @@ function DayflowBottomTabBar({ state, navigation }: BottomTabBarProps) {
 export default function TabsLayout() {
   return (
     <Tabs
-      tabBar={(props) => <DayflowBottomTabBar {...props} />}
+      tabBar={() => <DayflowBottomTabBar />}
       screenOptions={{
         headerShown: false,
       }}>
