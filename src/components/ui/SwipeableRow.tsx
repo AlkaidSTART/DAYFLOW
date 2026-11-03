@@ -1,9 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
   GestureResponderEvent,
-  PanResponder,
-  PanResponderGestureState,
   Pressable,
   StyleSheet,
   Text,
@@ -32,7 +30,7 @@ const SWIPE_THRESHOLD = 36;
 
 /**
  * Section 6.2 & 6.7:
- * 支持左滑手势（触摸 / 鼠标拖拽）露出右侧 danger 删除按钮，带触觉反馈与平滑回弹
+ * 支持左滑手势露出右侧 danger 删除按钮，带触觉反馈与平滑回弹（兼容 React 19 Compiler）
  */
 export function SwipeableRow({
   children,
@@ -44,8 +42,11 @@ export function SwipeableRow({
   const { haptic } = useHaptic();
 
   const translateX = useSharedValue(0);
-  const startXRef = useRef(0);
-  const crossedThresholdRef = useRef(false);
+  const startPageX = useSharedValue(0);
+  const startPageY = useSharedValue(0);
+  const baseTranslateX = useSharedValue(0);
+  const isDragging = useSharedValue(false);
+
   const [isOpen, setIsOpen] = useState(false);
 
   const snapTo = (target: number, openState: boolean) => {
@@ -56,51 +57,50 @@ export function SwipeableRow({
     setIsOpen(openState);
   };
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: (
-        _evt: GestureResponderEvent,
-        gestureState: PanResponderGestureState,
-      ) => {
-        if (disabled) return false;
-        const { dx, dy } = gestureState;
-        return Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.5;
-      },
-      onPanResponderGrant: () => {
-        startXRef.current = translateX.value;
-        crossedThresholdRef.current = false;
-      },
-      onPanResponderMove: (
-        _evt: GestureResponderEvent,
-        gestureState: PanResponderGestureState,
-      ) => {
-        const nextX = Math.max(
-          -ACTION_WIDTH - 16,
-          Math.min(0, startXRef.current + gestureState.dx),
-        );
-        translateX.value = nextX;
+  const handleTouchStart = (e: GestureResponderEvent) => {
+    if (disabled) return;
+    const touch = e.nativeEvent.touches?.[0] ?? e.nativeEvent;
+    startPageX.value = touch.pageX ?? 0;
+    startPageY.value = touch.pageY ?? 0;
+    baseTranslateX.value = translateX.value;
+    isDragging.value = false;
+  };
 
-        if (!crossedThresholdRef.current && nextX <= -SWIPE_THRESHOLD) {
-          crossedThresholdRef.current = true;
-          haptic('selection');
-        }
-      },
-      onPanResponderRelease: (
-        _evt: GestureResponderEvent,
-        gestureState: PanResponderGestureState,
-      ) => {
-        const finalX = startXRef.current + gestureState.dx;
-        if (finalX < -SWIPE_THRESHOLD || gestureState.vx < -0.35) {
-          snapTo(-ACTION_WIDTH, true);
-        } else {
-          snapTo(0, false);
-        }
-      },
-      onPanResponderTerminate: () => {
-        snapTo(0, false);
-      },
-    }),
-  ).current;
+  const handleTouchMove = (e: GestureResponderEvent) => {
+    if (disabled) return;
+    const touch = e.nativeEvent.touches?.[0] ?? e.nativeEvent;
+    const dx = (touch.pageX ?? 0) - startPageX.value;
+    const dy = (touch.pageY ?? 0) - startPageY.value;
+
+    if (!isDragging.value) {
+      if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+        isDragging.value = true;
+      } else {
+        return;
+      }
+    }
+
+    const nextX = Math.max(
+      -ACTION_WIDTH - 16,
+      Math.min(0, baseTranslateX.value + dx),
+    );
+    translateX.value = nextX;
+  };
+
+  const handleTouchEnd = (e: GestureResponderEvent) => {
+    if (disabled || !isDragging.value) return;
+    const touch = e.nativeEvent.changedTouches?.[0] ?? e.nativeEvent;
+    const dx = (touch.pageX ?? 0) - startPageX.value;
+    const finalX = baseTranslateX.value + dx;
+
+    if (finalX < -SWIPE_THRESHOLD) {
+      haptic('selection');
+      snapTo(-ACTION_WIDTH, true);
+    } else {
+      snapTo(0, false);
+    }
+    isDragging.value = false;
+  };
 
   const rowAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
@@ -132,13 +132,16 @@ export function SwipeableRow({
 
       {/* 前景可滑动内容行 */}
       <Animated.View
-        {...panResponder.panHandlers}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onTouchCancel={() => snapTo(0, false)}
         style={[styles.foreground, rowAnimatedStyle]}>
         {isOpen ? (
           <Pressable
             onPress={() => snapTo(0, false)}
             accessibilityLabel="收起操作项"
-            style={StyleSheet.absoluteFill}
+            style={[StyleSheet.absoluteFill, { zIndex: 10 }]}
           />
         ) : null}
         {children}

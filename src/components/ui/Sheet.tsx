@@ -1,12 +1,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { AnimatePresence, motion, PanInfo } from 'motion/react';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 import {
   GestureResponderEvent,
   KeyboardAvoidingView,
   Modal,
-  PanResponder,
-  PanResponderGestureState,
   Platform,
   Pressable,
   ScrollView,
@@ -47,6 +45,7 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
 
   const translateY = useSharedValue(480);
   const backdropOpacity = useSharedValue(0);
+  const dragStartY = useSharedValue(0);
 
   useEffect(() => {
     if (Platform.OS === 'web') return;
@@ -65,37 +64,32 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
     }
   }, [visible, backdropOpacity, translateY]);
 
-  const handlePanResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (
-        _evt: GestureResponderEvent,
-        gestureState: PanResponderGestureState,
-      ) => gestureState.dy > 4,
-      onPanResponderMove: (
-        _evt: GestureResponderEvent,
-        gestureState: PanResponderGestureState,
-      ) => {
-        if (gestureState.dy > 0) {
-          translateY.value = gestureState.dy;
-        }
-      },
-      onPanResponderRelease: (
-        _evt: GestureResponderEvent,
-        gestureState: PanResponderGestureState,
-      ) => {
-        if (gestureState.dy > 72 || gestureState.vy > 0.6) {
-          haptic('selection');
-          onClose();
-        } else {
-          translateY.value = withTiming(0, {
-            duration: 200,
-            easing: Easing.out(Easing.cubic),
-          });
-        }
-      },
-    }),
-  ).current;
+  const handleNativeTouchStart = (e: GestureResponderEvent) => {
+    const touch = e.nativeEvent.touches?.[0] ?? e.nativeEvent;
+    dragStartY.value = touch.pageY ?? 0;
+  };
+
+  const handleNativeTouchMove = (e: GestureResponderEvent) => {
+    const touch = e.nativeEvent.touches?.[0] ?? e.nativeEvent;
+    const dy = (touch.pageY ?? 0) - dragStartY.value;
+    if (dy > 0) {
+      translateY.value = dy;
+    }
+  };
+
+  const handleNativeTouchEnd = (e: GestureResponderEvent) => {
+    const touch = e.nativeEvent.changedTouches?.[0] ?? e.nativeEvent;
+    const dy = (touch.pageY ?? 0) - dragStartY.value;
+    if (dy > 72) {
+      haptic('selection');
+      onClose();
+    } else {
+      translateY.value = withTiming(0, {
+        duration: 200,
+        easing: Easing.out(Easing.cubic),
+      });
+    }
+  };
 
   const backdropStyle = useAnimatedStyle(() => ({
     opacity: backdropOpacity.value,
@@ -275,7 +269,9 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
           ]}>
           {/* 36×4 拖拽指示条 */}
           <View
-            {...handlePanResponder.panHandlers}
+            onTouchStart={handleNativeTouchStart}
+            onTouchMove={handleNativeTouchMove}
+            onTouchEnd={handleNativeTouchEnd}
             accessible={false}
             style={styles.handleWrapper}>
             <View
