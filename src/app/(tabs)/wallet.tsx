@@ -211,7 +211,7 @@ export default function WalletScreen() {
             <View>
               <Text className="text-h2 text-ink dark:text-ink-dark mb-4">本月概览</Text>
               <View
-                style={getCardSurfaceStyle(theme)}
+                style={getCardSurfaceStyle(theme, palette)}
                 className="rounded-lg p-4 flex-row items-center justify-between">
                 <View className="flex-1">
                   <Text className="text-caption text-ink-muted dark:text-ink-muted-dark mb-1">
@@ -274,8 +274,11 @@ export default function WalletScreen() {
                         triggerHaptic('selection', hapticEnabled);
                         setFilterCategoryId(null);
                       }}
-                      className="ml-2 px-2 py-0.5 rounded-sm bg-accent-soft dark:bg-accent-soft-dark">
-                      <Text className="text-micro font-semibold text-accent dark:text-accent-dark">
+                      style={{ backgroundColor: palette.accentSoft }}
+                      className="ml-2 px-2 py-0.5 rounded-sm">
+                      <Text
+                        style={{ color: palette.accent }}
+                        className="text-micro font-semibold">
                         清除筛选
                       </Text>
                     </Pressable>
@@ -292,7 +295,9 @@ export default function WalletScreen() {
                     accessibilityRole="button"
                     accessibilityLabel={showAllBills ? '收起账单列表' : '查看全部账单'}
                     className="min-h-[36px] px-2 items-center justify-center">
-                    <Text className="text-caption font-semibold text-accent dark:text-accent-dark">
+                    <Text
+                      style={{ color: palette.accent }}
+                      className="text-caption font-semibold">
                       {showAllBills ? '收起' : `全部 (${filteredBills.length})`}
                     </Text>
                   </Pressable>
@@ -300,7 +305,7 @@ export default function WalletScreen() {
               </View>
 
               {filteredBills.length === 0 ? (
-                <View style={getCardSurfaceStyle(theme)} className="rounded-lg">
+                <View style={getCardSurfaceStyle(theme, palette)} className="rounded-lg">
                   <EmptyState
                     icon="wallet-outline"
                     description="本月还没有账单，记下第一笔支出。"

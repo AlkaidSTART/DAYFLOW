@@ -33,7 +33,11 @@ export function BannerTip({
 
   return (
     <View
-      className={`flex-row items-center rounded-md px-4 py-3 bg-accent-soft dark:bg-accent-soft-dark ${className}`}>
+      style={{
+        backgroundColor:
+          tone === 'warning' ? `${palette.warning}22` : palette.accentSoft,
+      }}
+      className={`flex-row items-center rounded-md px-4 py-3 ${className}`}>
       <Ionicons name={iconName} size={20} color={iconColor} />
       <Text className="flex-1 text-caption text-ink dark:text-ink-dark ml-2.5">{message}</Text>
       {actionLabel && onAction ? (
@@ -43,7 +47,9 @@ export function BannerTip({
           accessibilityRole="button"
           accessibilityLabel={actionLabel}
           className="ml-2 px-2.5 py-1 rounded-sm bg-surface dark:bg-surface-dark items-center justify-center">
-          <Text className="text-caption font-semibold text-accent dark:text-accent-dark">
+          <Text
+            style={{ color: iconColor }}
+            className="text-caption font-semibold">
             {actionLabel}
           </Text>
         </Pressable>

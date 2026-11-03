@@ -79,7 +79,7 @@ export const BillRow = React.memo(function BillRow({
         onPressOut={handlePressOut}
         accessibilityRole="button"
         accessibilityLabel={`${displayTitle}，${categoryName}，${amountText}（点击编辑，左滑删除）`}
-        style={getCardSurfaceStyle(theme)}
+        style={getCardSurfaceStyle(theme, palette)}
         className="min-h-[64px] rounded-lg px-4 py-3 flex-row items-center justify-between">
         {/* 左侧 40×40 分类图标方块 + 标题与副标题 */}
         <View className="flex-row items-center flex-1 mr-3">

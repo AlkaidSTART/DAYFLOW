@@ -53,16 +53,19 @@ export default function FocusScreen() {
   const [finishSheetVisible, setFinishSheetVisible] = useState(false);
   const [modeSwitchNotice, setModeSwitchNotice] = useState<string | null>(null);
 
-  const getDurationForMode = (targetMode: FocusMode): number => {
-    if (targetMode === 'short_break') return shortBreakMinutes;
-    if (targetMode === 'long_break') return longBreakMinutes;
-    return focusMinutes;
-  };
+  const getDurationForMode = useMemo(
+    () => (targetMode: FocusMode): number => {
+      if (targetMode === 'short_break') return shortBreakMinutes;
+      if (targetMode === 'long_break') return longBreakMinutes;
+      return focusMinutes;
+    },
+    [focusMinutes, shortBreakMinutes, longBreakMinutes],
+  );
 
   // 当设置页修改时长且处于 idle 时同步
   useEffect(() => {
     syncIdleDuration(getDurationForMode(mode));
-  }, [focusMinutes, shortBreakMinutes, longBreakMinutes, mode, syncIdleDuration]);
+  }, [getDurationForMode, mode, syncIdleDuration]);
 
   // 250ms 时间戳刷新 & 后台恢复
   useEffect(() => {

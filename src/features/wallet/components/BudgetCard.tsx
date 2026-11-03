@@ -68,7 +68,7 @@ export function BudgetCard({ summary, onPressEditBudget }: BudgetCardProps) {
   if (!hasBudget) {
     return (
       <View
-        style={getCardSurfaceStyle(theme)}
+        style={getCardSurfaceStyle(theme, palette)}
         className="rounded-xl p-5">
         <View className="flex-row items-center justify-between mb-2">
           <Text className="text-caption text-ink-muted dark:text-ink-muted-dark">
@@ -111,14 +111,16 @@ export function BudgetCard({ summary, onPressEditBudget }: BudgetCardProps) {
         }}
         accessibilityRole="button"
         accessibilityLabel="本月预算卡片，点击调整预算"
-        style={getCardSurfaceStyle(theme)}
+        style={getCardSurfaceStyle(theme, palette)}
         className="rounded-xl p-5">
         <View className="flex-row items-center justify-between mb-2">
           <Text className="text-caption text-ink-muted dark:text-ink-muted-dark">
             本月预算
           </Text>
           <View className="flex-row items-center py-0.5">
-            <Text className="text-caption font-semibold text-accent dark:text-accent-dark">
+            <Text
+              style={{ color: palette.accent }}
+              className="text-caption font-semibold">
               调整
             </Text>
           </View>

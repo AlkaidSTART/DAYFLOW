@@ -166,19 +166,23 @@ export function TimerDisplay({
         </Animated.View>
       </Pressable>
 
-      {/* 计时器下方 4px 线性进度条 */}
-      <View className="w-[220px] h-[4px] rounded-full bg-surface-muted dark:bg-surface-muted-dark mt-6 overflow-hidden">
-        <Animated.View
-          style={[
-            {
-              height: '100%',
-              borderRadius: 999,
-              backgroundColor: isBreak ? palette.success : palette.accent,
-            },
-            barStyle,
-          ]}
-        />
-      </View>
+      {/* 计时器下方 4px 线性进度条（专注/休息进行中显示，未开始时保持留白避免空线残影） */}
+      {phase !== 'idle' ? (
+        <View className="w-[220px] h-[4px] rounded-full bg-surface-muted dark:bg-surface-muted-dark mt-6 overflow-hidden">
+          <Animated.View
+            style={[
+              {
+                height: '100%',
+                borderRadius: 999,
+                backgroundColor: isBreak ? palette.success : palette.accent,
+              },
+              barStyle,
+            ]}
+          />
+        </View>
+      ) : (
+        <View className="h-[4px] mt-6" />
+      )}
     </View>
   );
 }

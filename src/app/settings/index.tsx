@@ -20,7 +20,6 @@ import { triggerHaptic } from '@/lib/haptics';
 import { formatVersionTag } from '@/lib/version';
 import {
   COLOR_SCHEMES_LIST,
-  ColorSchemeId,
   getCardSurfaceStyle,
   tabularNumsStyle,
 } from '@/theme/tokens';

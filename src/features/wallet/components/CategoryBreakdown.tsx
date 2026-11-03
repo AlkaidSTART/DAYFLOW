@@ -26,9 +26,9 @@ export function CategoryBreakdown({
   selectedCategoryId = null,
   onSelectCategory,
 }: CategoryBreakdownProps) {
-  const { theme, palette } = useResolvedTheme();
+  const { theme, palette, chartColors } = useResolvedTheme();
   const { haptic } = useHaptic();
-  const chartPalette = CategoryChartColors[theme];
+  const chartPalette = chartColors ?? CategoryChartColors[theme];
 
   if (items.length === 0) {
     return null;
@@ -59,14 +59,16 @@ export function CategoryBreakdown({
             accessibilityRole="button"
             accessibilityLabel="清除分类筛选"
             className="min-h-[32px] px-2 items-center justify-center">
-            <Text className="text-caption font-semibold text-accent dark:text-accent-dark">
+            <Text
+              style={{ color: palette.accent }}
+              className="text-caption font-semibold">
               显示全部
             </Text>
           </Pressable>
         ) : null}
       </View>
 
-      <View style={getCardSurfaceStyle(theme)} className="rounded-lg p-4">
+      <View style={getCardSurfaceStyle(theme, palette)} className="rounded-lg p-4">
         {/* 堆叠占比条 */}
         <View className="h-[10px] rounded-full bg-surface-muted dark:bg-surface-muted-dark overflow-hidden flex-row mb-3">
           {items.map((item, idx) => {

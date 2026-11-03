@@ -212,17 +212,23 @@ export function TaskFormSheet({
                   onPress={() => handleSelectCategory(tag)}
                   accessibilityRole="button"
                   accessibilityLabel={`选择分类 ${tag}`}
-                  className={`px-3 py-1.5 rounded-sm border ${
-                    isSelected
-                      ? 'bg-accent-soft dark:bg-accent-soft-dark border-accent dark:border-accent-dark'
-                      : 'bg-surface-muted dark:bg-surface-muted-dark border-transparent'
-                  }`}>
+                  style={[
+                    {
+                      backgroundColor: isSelected
+                        ? palette.accentSoft
+                        : palette.surfaceMuted,
+                      borderColor: isSelected ? palette.accent : 'transparent',
+                    },
+                  ]}
+                  className="px-3 py-1.5 rounded-sm border">
                   <Text
-                    className={`text-micro ${
-                      isSelected
-                        ? 'font-semibold text-accent dark:text-accent-dark'
-                        : 'text-ink-muted dark:text-ink-muted-dark'
-                    }`}>
+                    style={[
+                      {
+                        color: isSelected ? palette.accent : palette.inkMuted,
+                        fontWeight: isSelected ? '600' : '400',
+                      },
+                    ]}
+                    className="text-micro">
                     {tag}
                   </Text>
                 </Pressable>
@@ -280,11 +286,16 @@ export function TaskFormSheet({
           accessibilityRole="switch"
           accessibilityState={{ checked: isTop3 }}
           accessibilityLabel="设为今日最重要的三件事"
-          className={`min-h-[52px] rounded-md px-4 py-3 flex-row items-center justify-between ${
-            isTop3
-              ? 'bg-accent-soft dark:bg-accent-soft-dark border border-accent dark:border-accent-dark'
-              : 'bg-surface-muted dark:bg-surface-muted-dark'
-          }`}>
+          style={[
+            {
+              backgroundColor: isTop3
+                ? palette.accentSoft
+                : palette.surfaceMuted,
+              borderColor: isTop3 ? palette.accent : 'transparent',
+              borderWidth: 1,
+            },
+          ]}
+          className="min-h-[52px] rounded-md px-4 py-3 flex-row items-center justify-between">
           <View className="flex-1 mr-3">
             <Text className="text-body-strong text-ink dark:text-ink-dark">
               设为今日重点（Top 3）
@@ -297,11 +308,12 @@ export function TaskFormSheet({
           </View>
 
           <View
-            className={`w-6 h-6 rounded-full items-center justify-center ${
+            style={[
               isTop3
-                ? 'bg-accent dark:bg-accent-dark'
-                : 'border-2 border-line dark:border-line-dark'
-            }`}>
+                ? { backgroundColor: palette.accent }
+                : { borderColor: palette.line, borderWidth: 2 },
+            ]}
+            className="w-6 h-6 rounded-full items-center justify-center">
             {isTop3 ? <Ionicons name="checkmark" size={14} color="#FFFFFF" /> : null}
           </View>
         </Pressable>

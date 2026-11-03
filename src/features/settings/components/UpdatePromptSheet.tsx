@@ -79,13 +79,17 @@ export function UpdatePromptSheet() {
           </View>
 
           <View className="items-end">
-            <Text className="text-micro text-accent dark:text-accent-dark mb-1">
+            <Text
+              style={{ color: palette.accent }}
+              className="text-micro mb-1">
               仓库最新版本
             </Text>
-            <View className="px-2.5 py-0.5 rounded-sm bg-accent-soft dark:bg-accent-soft-dark">
+            <View
+              style={{ backgroundColor: palette.accentSoft }}
+              className="px-2.5 py-0.5 rounded-sm">
               <Text
-                style={tabularNumsStyle}
-                className="text-body-strong text-accent dark:text-accent-dark">
+                style={[tabularNumsStyle, { color: palette.accent }]}
+                className="text-body-strong">
                 {formatVersionTag(remoteInfo.version)}
               </Text>
             </View>
