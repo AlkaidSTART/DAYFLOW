@@ -27,14 +27,14 @@ export function TabPageTransition({ routeKey, children }: TabPageTransitionProps
   useEffect(() => {
     if (Platform.OS === 'web') return;
     opacity.value = 0;
-    translateY.value = 10;
+    translateY.value = 4;
     opacity.value = withTiming(1, {
-      duration: 240,
-      easing: Easing.bezier(0.33, 1, 0.68, 1),
+      duration: 150,
+      easing: Easing.bezier(0.22, 1, 0.36, 1),
     });
     translateY.value = withTiming(0, {
-      duration: 240,
-      easing: Easing.bezier(0.33, 1, 0.68, 1),
+      duration: 150,
+      easing: Easing.bezier(0.22, 1, 0.36, 1),
     });
   }, [pathname, opacity, translateY]);
 
@@ -47,11 +47,11 @@ export function TabPageTransition({ routeKey, children }: TabPageTransitionProps
     return (
       <motion.div
         key={`${routeKey}_${pathname}`}
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{
-          duration: 0.24,
-          ease: [0.33, 1, 0.68, 1],
+          duration: 0.15,
+          ease: [0.22, 1, 0.36, 1],
         }}
         style={{
           display: 'flex',

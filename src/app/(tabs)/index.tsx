@@ -4,10 +4,12 @@ import React, { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { BannerTip } from '@/components/ui/BannerTip';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { TabPageTransition } from '@/components/ui/TabPageTransition';
 import { useFocusStore } from '@/features/focus/store/focus-store';
 import { useSettingsStore } from '@/features/settings/store/settings-store';
+import { useVersionStore } from '@/features/settings/store/version-store';
 import { DailyReviewSheet } from '@/features/today/components/DailyReviewSheet';
 import { ProgressCard } from '@/features/today/components/ProgressCard';
 import { TaskFormSheet } from '@/features/today/components/TaskFormSheet';
@@ -19,6 +21,7 @@ import { computeTodayProgress } from '@/features/today/utils/progress';
 import { useResolvedTheme } from '@/hooks/use-resolved-theme';
 import { formatTodayHeaderDate, getGreetingByHour } from '@/lib/date';
 import { triggerHaptic } from '@/lib/haptics';
+import { formatVersionTag } from '@/lib/version';
 
 /**
  * Section 7.1: Today 每日工作台页面
@@ -42,6 +45,18 @@ export default function TodayScreen() {
   const sessions = useFocusStore((s) => s.sessions);
   const hapticEnabled = useSettingsStore((s) => s.hapticEnabled);
   const showSnackbar = useSettingsStore((s) => s.showSnackbar);
+
+  const currentVersion = useVersionStore((s) => s.currentVersion);
+  const remoteInfo = useVersionStore((s) => s.remoteInfo);
+  const isOutdated = useVersionStore((s) => s.isOutdated);
+  const dismissedVersion = useVersionStore((s) => s.dismissedVersion);
+  const openUpdateSheet = useVersionStore((s) => s.openUpdateSheet);
+  const dismissUpdateBanner = useVersionStore((s) => s.dismissUpdateBanner);
+
+  const showUpdateBanner =
+    isOutdated &&
+    remoteInfo !== null &&
+    dismissedVersion !== remoteInfo.version;
 
   const [editMode, setEditMode] = useState(false);
   const [sheetVisible, setSheetVisible] = useState(false);
@@ -178,9 +193,16 @@ export default function TodayScreen() {
                 }}
                 hitSlop={10}
                 accessibilityRole="button"
-                accessibilityLabel="打开设置"
-                className="w-12 h-12 -mr-2 items-center justify-center rounded-full">
+                accessibilityLabel={isOutdated ? '打开设置（有新版本可更新）' : '打开设置'}
+                className="w-12 h-12 -mr-2 items-center justify-center rounded-full relative">
                 <Ionicons name="settings-outline" size={24} color={palette.ink} />
+                {isOutdated ? (
+                  <View
+                    accessible={false}
+                    style={{ backgroundColor: palette.accent }}
+                    className="w-2.5 h-2.5 rounded-full absolute top-2.5 right-2.5"
+                  />
+                ) : null}
               </Pressable>
             </View>
 
@@ -188,6 +210,18 @@ export default function TodayScreen() {
               {getGreetingByHour()}
             </Text>
           </View>
+
+          {/* 版本落后时的页面内乐观更新提示条（非强制阻断，可随时查看或关闭） */}
+          {showUpdateBanner && remoteInfo ? (
+            <BannerTip
+              tone="accent"
+              message={`发现新版本 ${formatVersionTag(remoteInfo.version)}（当前 ${formatVersionTag(currentVersion)}），可随时前往更新。`}
+              actionLabel="查看更新"
+              onAction={openUpdateSheet}
+              onDismiss={() => dismissUpdateBanner(remoteInfo.version)}
+              className="mb-6"
+            />
+          ) : null}
 
           {tasks.length === 0 ? (
             <View className="gap-8">

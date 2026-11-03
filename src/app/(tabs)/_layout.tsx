@@ -2,10 +2,11 @@ import { Ionicons } from '@expo/vector-icons';
 import { Href, Tabs, usePathname, useRouter } from 'expo-router';
 import { motion } from 'motion/react';
 import React from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useResolvedTheme } from '@/hooks/use-resolved-theme';
+import { RadiusTokens } from '@/theme/tokens';
 
 type TabConfig = {
   routeName: string;
@@ -44,12 +45,10 @@ const TAB_ITEMS: TabConfig[] = [
 ];
 
 /**
- * Section 5, Section 6.1 & Section 8: 底部导航（带 motion 滑动胶囊与微动效）
- * - 三个 Tab：Today / Focus / Wallet
- * - 高度遵循系统安全区；图标 24，标签 12
- * - 选中态：图标与标签使用 ink，背景胶囊使用 surface-selected（通过 motion layoutId 平滑滑动过渡）；未选中 ink-muted
- * - 不使用浮动胶囊 Tab 或自定义大圆角 Tab
- * - 切换 Tab 无触觉反馈（Section 9）
+ * 底部纯图标全宽导航栏
+ * - 三个 Tab 等分铺满整个底部宽度（flex: 1）
+ * - 去除文字，仅保留 26px 图标与无障碍标签
+ * - 动效采用高刚度无回弹阻尼（约 140ms 到位），干净利落不拖沓
  */
 function DayflowBottomTabBar() {
   const insets = useSafeAreaInsets();
@@ -64,137 +63,84 @@ function DayflowBottomTabBar() {
         {
           backgroundColor: palette.canvas,
           borderTopColor: palette.line,
-          paddingBottom: Math.max(insets.bottom, 12),
+          paddingBottom: Math.max(insets.bottom, 10),
         },
       ]}>
-      <View style={styles.barInner}>
-        {TAB_ITEMS.map((tab) => {
-          const isFocused =
-            tab.matchPath === '/'
-              ? pathname === '/' || pathname === '/index'
-              : pathname.startsWith(tab.matchPath);
+      {TAB_ITEMS.map((tab) => {
+        const isFocused =
+          tab.matchPath === '/'
+            ? pathname === '/' || pathname === '/index'
+            : pathname.startsWith(tab.matchPath);
 
-          const handlePress = () => {
-            if (!isFocused) {
-              router.replace(tab.href);
-            }
-          };
+        const handlePress = () => {
+          if (!isFocused) {
+            router.replace(tab.href);
+          }
+        };
 
-          return (
-            <Pressable
-              key={tab.routeName}
-              onPress={handlePress}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: isFocused }}
-              accessibilityLabel={tab.label}
-              style={styles.tabItem}>
-              {Platform.OS === 'web' ? (
-                <motion.div
-                  whileTap={{ scale: 0.95 }}
-                  transition={{ duration: 0.12 }}
-                  style={{
-                    width: '100%',
-                    minHeight: 62,
-                    paddingTop: 9,
-                    paddingBottom: 9,
-                    paddingLeft: 16,
-                    paddingRight: 16,
-                    borderRadius: 18,
-                    position: 'relative',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 4,
-                  }}>
-                  {isFocused ? (
-                    <motion.div
-                      layoutId="dayflow-bottom-tab-pill"
-                      transition={{
-                        type: 'spring',
-                        stiffness: 420,
-                        damping: 32,
-                        mass: 0.75,
-                      }}
-                      style={{
-                        position: 'absolute',
-                        inset: 0,
-                        borderRadius: 18,
-                        backgroundColor: palette.surfaceSelected,
-                      }}
-                    />
-                  ) : null}
-
+        return (
+          <Pressable
+            key={tab.routeName}
+            onPress={handlePress}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: isFocused }}
+            accessibilityLabel={tab.label}
+            style={styles.tabItem}>
+            {Platform.OS === 'web' ? (
+              <motion.div
+                whileTap={{ scale: 0.96 }}
+                transition={{ duration: 0.08, ease: 'easeOut' }}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: RadiusTokens.md,
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}>
+                {isFocused ? (
                   <motion.div
-                    animate={{
-                      scale: isFocused ? 1.06 : 1,
-                      y: isFocused ? -1 : 0,
-                    }}
+                    layoutId="dayflow-bottom-tab-indicator"
                     transition={{
-                      type: 'spring',
-                      stiffness: 460,
-                      damping: 26,
+                      duration: 0.16,
+                      ease: [0.22, 1, 0.36, 1],
                     }}
                     style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      zIndex: 1,
-                    }}>
-                    <Ionicons
-                      name={isFocused ? tab.iconActive : tab.iconOutline}
-                      size={26}
-                      color={isFocused ? palette.accent : palette.inkMuted}
-                    />
-                  </motion.div>
-
-                  <motion.div
-                    animate={{
-                      opacity: isFocused ? 1 : 0.85,
+                      position: 'absolute',
+                      inset: 0,
+                      borderRadius: RadiusTokens.md,
+                      backgroundColor: palette.surfaceSelected,
                     }}
-                    transition={{ duration: 0.18 }}
-                    style={{ zIndex: 1 }}>
-                    <Text
-                      style={[
-                        styles.tabLabel,
-                        {
-                          color: isFocused ? palette.ink : palette.inkMuted,
-                          fontWeight: isFocused ? '600' : '500',
-                        },
-                      ]}>
-                      {tab.label}
-                    </Text>
-                  </motion.div>
-                </motion.div>
-              ) : (
-                <View
-                  style={[
-                    styles.tabButtonNative,
-                    isFocused
-                      ? { backgroundColor: palette.surfaceSelected }
-                      : undefined,
-                  ]}>
+                  />
+                ) : null}
+
+                <View style={styles.iconWrapper}>
                   <Ionicons
                     name={isFocused ? tab.iconActive : tab.iconOutline}
                     size={26}
-                    color={isFocused ? palette.accent : palette.inkMuted}
+                    color={isFocused ? palette.ink : palette.inkMuted}
                   />
-                  <Text
-                    style={[
-                      styles.tabLabel,
-                      {
-                        color: isFocused ? palette.ink : palette.inkMuted,
-                        fontWeight: isFocused ? '600' : '500',
-                      },
-                    ]}>
-                    {tab.label}
-                  </Text>
                 </View>
-              )}
-            </Pressable>
-          );
-        })}
-      </View>
+              </motion.div>
+            ) : (
+              <View
+                style={[
+                  styles.tabButtonNative,
+                  isFocused
+                    ? { backgroundColor: palette.surfaceSelected }
+                    : undefined,
+                ]}>
+                <Ionicons
+                  name={isFocused ? tab.iconActive : tab.iconOutline}
+                  size={26}
+                  color={isFocused ? palette.ink : palette.inkMuted}
+                />
+              </View>
+            )}
+          </Pressable>
+        );
+      })}
     </View>
   );
 }
@@ -215,37 +161,28 @@ export default function TabsLayout() {
 
 const styles = StyleSheet.create({
   barContainer: {
-    borderTopWidth: 1,
-    paddingTop: 10,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  barInner: {
     width: '100%',
-    maxWidth: 520,
+    borderTopWidth: 1,
+    paddingTop: 8,
+    paddingHorizontal: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 10,
+    gap: 8,
   },
   tabItem: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    height: 48,
   },
   tabButtonNative: {
     width: '100%',
-    minHeight: 62,
-    paddingVertical: 9,
-    paddingHorizontal: 16,
-    borderRadius: 18,
+    height: '100%',
+    borderRadius: RadiusTokens.md,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
   },
-  tabLabel: {
-    fontSize: 14,
-    lineHeight: 18,
-    letterSpacing: 0.2,
+  iconWrapper: {
+    zIndex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

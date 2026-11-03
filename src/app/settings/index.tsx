@@ -12,10 +12,12 @@ import {
   ThemePreference,
   useSettingsStore,
 } from '@/features/settings/store/settings-store';
+import { useVersionStore } from '@/features/settings/store/version-store';
 import { useTodayStore } from '@/features/today/store/today-store';
 import { useWalletStore } from '@/features/wallet/store/wallet-store';
 import { useResolvedTheme } from '@/hooks/use-resolved-theme';
 import { triggerHaptic } from '@/lib/haptics';
+import { formatVersionTag } from '@/lib/version';
 import { getCardSurfaceStyle, tabularNumsStyle } from '@/theme/tokens';
 
 const THEME_OPTIONS: SegmentOption<ThemePreference>[] = [
@@ -68,8 +70,41 @@ export default function SettingsScreen() {
   const clearAllWalletData = useWalletStore((s) => s.clearAllWalletData);
   const resetSampleWalletData = useWalletStore((s) => s.resetSampleWalletData);
 
+  const currentVersion = useVersionStore((s) => s.currentVersion);
+  const packageId = useVersionStore((s) => s.packageId);
+  const versionStatus = useVersionStore((s) => s.status);
+  const remoteInfo = useVersionStore((s) => s.remoteInfo);
+  const isOutdated = useVersionStore((s) => s.isOutdated);
+  const checkForUpdates = useVersionStore((s) => s.checkForUpdates);
+  const openUpdateSheet = useVersionStore((s) => s.openUpdateSheet);
+  const simulateOutdatedUpdate = useVersionStore((s) => s.simulateOutdatedUpdate);
+
   const [restoreConfirmVisible, setRestoreConfirmVisible] = useState(false);
   const [licenseSheetVisible, setLicenseSheetVisible] = useState(false);
+
+  const handleCheckUpdatePress = async () => {
+    triggerHaptic('selection', hapticEnabled);
+    if (isOutdated && remoteInfo) {
+      openUpdateSheet();
+      return;
+    }
+
+    const res = await checkForUpdates({
+      silent: false,
+      openSheetIfOutdated: true,
+    });
+
+    if (!res.ok) {
+      showSnackbar(res.error ?? '检查更新失败，请稍后重试');
+      return;
+    }
+
+    if (res.isOutdated && res.remoteInfo) {
+      showSnackbar(`发现新版本 ${formatVersionTag(res.remoteInfo.version)}`);
+    } else {
+      showSnackbar(`当前已是最新版本 ${formatVersionTag(currentVersion)}`);
+    }
+  };
 
   const handleExportBackup = () => {
     showSnackbar('已生成备份 dayflow-backup.json');
@@ -458,9 +493,58 @@ export default function SettingsScreen() {
                 <Text
                   style={tabularNumsStyle}
                   className="text-caption text-ink-muted dark:text-ink-muted-dark">
-                  V1.0.0 (com.alkaidstart.dayflow)
+                  {formatVersionTag(currentVersion)} ({packageId})
                 </Text>
               </View>
+
+              <View className="h-[1px] bg-line dark:bg-line-dark" />
+
+              <Pressable
+                onPress={handleCheckUpdatePress}
+                disabled={versionStatus === 'checking'}
+                accessibilityRole="button"
+                accessibilityLabel="对比仓库最新版本并检查更新"
+                className="min-h-[44px] flex-row items-center justify-between">
+                <View className="flex-1 mr-3">
+                  <Text className="text-body text-ink dark:text-ink-dark">版本更新</Text>
+                  <Text className="text-micro text-ink-subtle dark:text-ink-subtle-dark mt-0.5">
+                    {isOutdated && remoteInfo
+                      ? `落后于仓库最新 ${formatVersionTag(remoteInfo.version)}，点击查看乐观更新`
+                      : '与 GitHub 仓库最新版本自动比对'}
+                  </Text>
+                </View>
+
+                <View className="flex-row items-center">
+                  {versionStatus === 'checking' ? (
+                    <Text className="text-caption text-ink-muted dark:text-ink-muted-dark mr-1">
+                      检查中...
+                    </Text>
+                  ) : isOutdated && remoteInfo ? (
+                    <View className="px-2.5 py-1 rounded-sm bg-accent-soft dark:bg-accent-soft-dark mr-1.5 flex-row items-center">
+                      <View
+                        style={{ backgroundColor: palette.accent }}
+                        className="w-1.5 h-1.5 rounded-full mr-1.5"
+                      />
+                      <Text
+                        style={tabularNumsStyle}
+                        className="text-caption font-semibold text-accent dark:text-accent-dark">
+                        新版本 {formatVersionTag(remoteInfo.version)}
+                      </Text>
+                    </View>
+                  ) : versionStatus === 'up-to-date' ? (
+                    <Text
+                      style={tabularNumsStyle}
+                      className="text-caption text-success dark:text-success-dark mr-1">
+                      已是最新 ({formatVersionTag(remoteInfo?.version ?? currentVersion)})
+                    </Text>
+                  ) : (
+                    <Text className="text-caption text-ink-muted dark:text-ink-muted-dark mr-1">
+                      检查更新
+                    </Text>
+                  )}
+                  <Ionicons name="chevron-forward-outline" size={16} color={palette.inkMuted} />
+                </View>
+              </Pressable>
 
               <View className="h-[1px] bg-line dark:bg-line-dark" />
 
@@ -477,6 +561,38 @@ export default function SettingsScreen() {
                   <Ionicons name="chevron-forward-outline" size={16} color={palette.inkMuted} />
                 </View>
               </Pressable>
+
+              <View className="h-[1px] bg-line dark:bg-line-dark" />
+
+              {/* 验收辅助：一键模拟远端有新版本时的乐观更新提示 */}
+              <View className="pt-1 flex-row gap-2">
+                <Button
+                  label="模拟新版本提示"
+                  onPress={() => {
+                    triggerHaptic('selection', hapticEnabled);
+                    simulateOutdatedUpdate();
+                  }}
+                  variant="secondary"
+                  size="sm"
+                  className="flex-1"
+                />
+                <Button
+                  label="重新比对仓库版本"
+                  onPress={() => {
+                    triggerHaptic('selection', hapticEnabled);
+                    checkForUpdates({ silent: false, openSheetIfOutdated: true }).then((res) => {
+                      if (res.ok && !res.isOutdated) {
+                        showSnackbar(`与仓库版本一致 (${formatVersionTag(currentVersion)})`);
+                      } else if (!res.ok) {
+                        showSnackbar(res.error ?? '检查更新失败');
+                      }
+                    });
+                  }}
+                  variant="secondary"
+                  size="sm"
+                  className="flex-1"
+                />
+              </View>
             </View>
           </View>
         </View>
