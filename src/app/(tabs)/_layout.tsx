@@ -64,40 +64,49 @@ function DayflowBottomTabBar() {
         {
           backgroundColor: palette.canvas,
           borderTopColor: palette.line,
-          paddingBottom: Math.max(insets.bottom, 8),
+          paddingBottom: Math.max(insets.bottom, 12),
         },
       ]}>
-      {TAB_ITEMS.map((tab) => {
-        const isFocused =
-          tab.matchPath === '/'
-            ? pathname === '/' || pathname === '/index'
-            : pathname.startsWith(tab.matchPath);
+      <View style={styles.barInner}>
+        {TAB_ITEMS.map((tab) => {
+          const isFocused =
+            tab.matchPath === '/'
+              ? pathname === '/' || pathname === '/index'
+              : pathname.startsWith(tab.matchPath);
 
-        const handlePress = () => {
-          if (!isFocused) {
-            router.replace(tab.href);
-          }
-        };
+          const handlePress = () => {
+            if (!isFocused) {
+              router.replace(tab.href);
+            }
+          };
 
-        return (
-          <Pressable
-            key={tab.routeName}
-            onPress={handlePress}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: isFocused }}
-            accessibilityLabel={tab.label}
-            style={styles.tabItem}>
-            {Platform.OS === 'web' ? (
-              <motion.div
-                whileTap={{ scale: 0.92 }}
-                transition={{ duration: 0.12 }}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                <View style={styles.pillSlot}>
+          return (
+            <Pressable
+              key={tab.routeName}
+              onPress={handlePress}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: isFocused }}
+              accessibilityLabel={tab.label}
+              style={styles.tabItem}>
+              {Platform.OS === 'web' ? (
+                <motion.div
+                  whileTap={{ scale: 0.95 }}
+                  transition={{ duration: 0.12 }}
+                  style={{
+                    width: '100%',
+                    minHeight: 62,
+                    paddingTop: 9,
+                    paddingBottom: 9,
+                    paddingLeft: 16,
+                    paddingRight: 16,
+                    borderRadius: 18,
+                    position: 'relative',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 4,
+                  }}>
                   {isFocused ? (
                     <motion.div
                       layoutId="dayflow-bottom-tab-pill"
@@ -110,7 +119,7 @@ function DayflowBottomTabBar() {
                       style={{
                         position: 'absolute',
                         inset: 0,
-                        borderRadius: 999,
+                        borderRadius: 18,
                         backgroundColor: palette.surfaceSelected,
                       }}
                     />
@@ -118,7 +127,7 @@ function DayflowBottomTabBar() {
 
                   <motion.div
                     animate={{
-                      scale: isFocused ? 1.08 : 1,
+                      scale: isFocused ? 1.06 : 1,
                       y: isFocused ? -1 : 0,
                     }}
                     transition={{
@@ -134,18 +143,42 @@ function DayflowBottomTabBar() {
                     }}>
                     <Ionicons
                       name={isFocused ? tab.iconActive : tab.iconOutline}
-                      size={24}
-                      color={isFocused ? palette.ink : palette.inkMuted}
+                      size={26}
+                      color={isFocused ? palette.accent : palette.inkMuted}
                     />
                   </motion.div>
-                </View>
 
-                <motion.div
-                  animate={{
-                    opacity: isFocused ? 1 : 0.82,
-                    y: isFocused ? 0 : 1,
-                  }}
-                  transition={{ duration: 0.18 }}>
+                  <motion.div
+                    animate={{
+                      opacity: isFocused ? 1 : 0.85,
+                    }}
+                    transition={{ duration: 0.18 }}
+                    style={{ zIndex: 1 }}>
+                    <Text
+                      style={[
+                        styles.tabLabel,
+                        {
+                          color: isFocused ? palette.ink : palette.inkMuted,
+                          fontWeight: isFocused ? '600' : '500',
+                        },
+                      ]}>
+                      {tab.label}
+                    </Text>
+                  </motion.div>
+                </motion.div>
+              ) : (
+                <View
+                  style={[
+                    styles.tabButtonNative,
+                    isFocused
+                      ? { backgroundColor: palette.surfaceSelected }
+                      : undefined,
+                  ]}>
+                  <Ionicons
+                    name={isFocused ? tab.iconActive : tab.iconOutline}
+                    size={26}
+                    color={isFocused ? palette.accent : palette.inkMuted}
+                  />
                   <Text
                     style={[
                       styles.tabLabel,
@@ -156,36 +189,12 @@ function DayflowBottomTabBar() {
                     ]}>
                     {tab.label}
                   </Text>
-                </motion.div>
-              </motion.div>
-            ) : (
-              <>
-                <View
-                  style={[
-                    styles.pillSlot,
-                    isFocused ? { backgroundColor: palette.surfaceSelected } : undefined,
-                  ]}>
-                  <Ionicons
-                    name={isFocused ? tab.iconActive : tab.iconOutline}
-                    size={24}
-                    color={isFocused ? palette.ink : palette.inkMuted}
-                  />
                 </View>
-                <Text
-                  style={[
-                    styles.tabLabel,
-                    {
-                      color: isFocused ? palette.ink : palette.inkMuted,
-                      fontWeight: isFocused ? '600' : '500',
-                    },
-                  ]}>
-                  {tab.label}
-                </Text>
-              </>
-            )}
-          </Pressable>
-        );
-      })}
+              )}
+            </Pressable>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -207,29 +216,36 @@ export default function TabsLayout() {
 const styles = StyleSheet.create({
   barContainer: {
     borderTopWidth: 1,
-    paddingTop: 8,
+    paddingTop: 10,
     paddingHorizontal: 16,
+    alignItems: 'center',
+  },
+  barInner: {
+    width: '100%',
+    maxWidth: 520,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
+    gap: 10,
   },
   tabItem: {
     flex: 1,
-    minHeight: 54,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  pillSlot: {
-    width: 64,
-    height: 32,
-    borderRadius: 999,
+  tabButtonNative: {
+    width: '100%',
+    minHeight: 62,
+    paddingVertical: 9,
+    paddingHorizontal: 16,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 4,
-    position: 'relative',
+    gap: 4,
   },
   tabLabel: {
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 14,
+    lineHeight: 18,
+    letterSpacing: 0.2,
   },
 });

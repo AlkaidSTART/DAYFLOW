@@ -11,6 +11,7 @@ import Animated, {
 import { Button } from '@/components/ui/Button';
 import { TodayProgressSummary } from '@/features/today/types';
 import { useResolvedTheme } from '@/hooks/use-resolved-theme';
+import { useHaptic } from '@/lib/haptics';
 import { getCardSurfaceStyle, tabularNumsStyle } from '@/theme/tokens';
 
 export type ProgressCardProps = {
@@ -31,6 +32,7 @@ export function ProgressCard({
   onPressDailyReview,
 }: ProgressCardProps) {
   const { theme, palette } = useResolvedTheme();
+  const { haptic } = useHaptic();
   const barWidth = useSharedValue(progress.percentage);
 
   useEffect(() => {
@@ -49,7 +51,10 @@ export function ProgressCard({
       <View className="flex-row items-center justify-between mb-4">
         <Text className="text-h2 text-ink dark:text-ink-dark">今日进度</Text>
         <Pressable
-          onPress={onPressDailyReview}
+          onPress={() => {
+            haptic('selection');
+            onPressDailyReview();
+          }}
           hitSlop={10}
           accessibilityRole="button"
           accessibilityLabel="打开每日复盘"
@@ -69,14 +74,23 @@ export function ProgressCard({
             <View className="flex-row">
               <Button
                 label="新建第一个任务"
-                onPress={onPressAddTask}
+                onPress={() => {
+                  haptic('selection');
+                  onPressAddTask();
+                }}
                 variant="primary"
                 size="sm"
               />
             </View>
           </View>
         ) : (
-          <>
+          <Pressable
+            onPress={() => {
+              haptic('selection');
+              onPressDailyReview();
+            }}
+            accessibilityRole="button"
+            accessibilityLabel={`今日已完成 ${progress.completedCount} / ${progress.totalCount}，点击查看每日复盘`}>
             <View className="flex-row items-baseline justify-between mb-2.5">
               <Text
                 style={tabularNumsStyle}
@@ -103,11 +117,18 @@ export function ProgressCard({
                 ]}
               />
             </View>
-          </>
+          </Pressable>
         )}
 
-        {/* Focus 摘要行 */}
-        <View className="mt-4 pt-3 border-t border-line dark:border-line-dark flex-row items-center justify-between">
+        {/* Focus 摘要行（整行可点击跳转专注中心） */}
+        <Pressable
+          onPress={() => {
+            haptic('selection');
+            onPressGoFocus();
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="查看专注中心"
+          className="mt-4 pt-3 border-t border-line dark:border-line-dark flex-row items-center justify-between">
           <View className="flex-row items-center">
             <Ionicons name="timer-outline" size={18} color={palette.inkMuted} />
             <Text
@@ -117,18 +138,13 @@ export function ProgressCard({
             </Text>
           </View>
 
-          <Pressable
-            onPress={onPressGoFocus}
-            hitSlop={10}
-            accessibilityRole="button"
-            accessibilityLabel="查看专注中心"
-            className="flex-row items-center py-1">
+          <View className="flex-row items-center py-1">
             <Text className="text-caption font-semibold text-accent dark:text-accent-dark mr-1">
               查看专注
             </Text>
             <Ionicons name="arrow-forward-outline" size={14} color={palette.accent} />
-          </Pressable>
-        </View>
+          </View>
+        </Pressable>
       </View>
     </View>
   );

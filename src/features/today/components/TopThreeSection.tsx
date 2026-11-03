@@ -5,6 +5,7 @@ import { Pressable, Text, View } from 'react-native';
 import { TaskRow } from '@/features/today/components/TaskRow';
 import { Task } from '@/features/today/types';
 import { useResolvedTheme } from '@/hooks/use-resolved-theme';
+import { useHaptic } from '@/lib/haptics';
 import { tabularNumsStyle } from '@/theme/tokens';
 
 export type TopThreeSectionProps = {
@@ -13,6 +14,7 @@ export type TopThreeSectionProps = {
   onToggleEditMode: () => void;
   onToggleComplete: (task: Task) => void;
   onPressTask: (task: Task) => void;
+  onLongPressTask: (task: Task) => void;
   onAddSlot: (slotNumber: number) => void;
   onRequestDelete: (task: Task) => void;
   onMoveOrder: (task: Task, direction: 'up' | 'down') => void;
@@ -31,11 +33,13 @@ export function TopThreeSection({
   onToggleEditMode,
   onToggleComplete,
   onPressTask,
+  onLongPressTask,
   onAddSlot,
   onRequestDelete,
   onMoveOrder,
 }: TopThreeSectionProps) {
   const { palette } = useResolvedTheme();
+  const { haptic } = useHaptic();
 
   const slots = [0, 1, 2];
   const allThreeCompleted =
@@ -47,7 +51,10 @@ export function TopThreeSection({
         <Text className="text-h2 text-ink dark:text-ink-dark">今天最重要的三件事</Text>
         {top3Tasks.length > 0 ? (
           <Pressable
-            onPress={onToggleEditMode}
+            onPress={() => {
+              haptic('selection');
+              onToggleEditMode();
+            }}
             hitSlop={10}
             accessibilityRole="button"
             accessibilityLabel={editMode ? '完成编辑重点任务' : '编辑重点任务'}
@@ -75,6 +82,7 @@ export function TopThreeSection({
                 canMoveDown={slotIndex < top3Tasks.length - 1}
                 onToggleComplete={onToggleComplete}
                 onPress={onPressTask}
+                onLongPress={onLongPressTask}
                 onRequestDelete={onRequestDelete}
                 onMoveOrder={onMoveOrder}
               />
@@ -84,7 +92,10 @@ export function TopThreeSection({
           return (
             <Pressable
               key={`empty_slot_${slotNumber}`}
-              onPress={() => onAddSlot(slotNumber)}
+              onPress={() => {
+                haptic('selection');
+                onAddSlot(slotNumber);
+              }}
               accessibilityRole="button"
               accessibilityLabel={`添加第 ${slotNumber} 件重点任务`}
               className="min-h-[56px] rounded-lg border border-dashed border-line dark:border-line-dark px-4 py-3 flex-row items-center justify-between">

@@ -1,9 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
-import { AnimatePresence, motion } from 'motion/react';
-import React, { useEffect } from 'react';
+import { AnimatePresence, motion, PanInfo } from 'motion/react';
+import React, { useEffect, useRef } from 'react';
 import {
+  GestureResponderEvent,
   KeyboardAvoidingView,
   Modal,
+  PanResponder,
+  PanResponderGestureState,
   Platform,
   Pressable,
   ScrollView,
@@ -20,6 +23,7 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useResolvedTheme } from '@/hooks/use-resolved-theme';
+import { useHaptic } from '@/lib/haptics';
 import { RadiusTokens } from '@/theme/tokens';
 
 export type SheetProps = {
@@ -31,7 +35,7 @@ export type SheetProps = {
 
 /**
  * Section 6.11 & 8.2: 底部弹层（Sheet）
- * - 顶部圆角 xl (28px)，背景 surface（实色不透明），拖拽指示条 36×4 line
+ * - 顶部圆角 xl (28px)，背景 surface（实色不透明），拖拽指示条 36×4 line（支持触摸下滑关闭）
  * - 遮罩 rgba(28, 25, 23, 0.35) (200ms easeOut)
  * - 弹层入场 280ms cubic-bezier(0.32, 0.72, 0, 1)，从底部向上滑出
  * - 最大高度 85%，内容超出可滚动
@@ -39,6 +43,7 @@ export type SheetProps = {
 export function Sheet({ visible, onClose, title, children }: SheetProps) {
   const insets = useSafeAreaInsets();
   const { palette } = useResolvedTheme();
+  const { haptic } = useHaptic();
 
   const translateY = useSharedValue(480);
   const backdropOpacity = useSharedValue(0);
@@ -60,6 +65,38 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
     }
   }, [visible, backdropOpacity, translateY]);
 
+  const handlePanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (
+        _evt: GestureResponderEvent,
+        gestureState: PanResponderGestureState,
+      ) => gestureState.dy > 4,
+      onPanResponderMove: (
+        _evt: GestureResponderEvent,
+        gestureState: PanResponderGestureState,
+      ) => {
+        if (gestureState.dy > 0) {
+          translateY.value = gestureState.dy;
+        }
+      },
+      onPanResponderRelease: (
+        _evt: GestureResponderEvent,
+        gestureState: PanResponderGestureState,
+      ) => {
+        if (gestureState.dy > 72 || gestureState.vy > 0.6) {
+          haptic('selection');
+          onClose();
+        } else {
+          translateY.value = withTiming(0, {
+            duration: 200,
+            easing: Easing.out(Easing.cubic),
+          });
+        }
+      },
+    }),
+  ).current;
+
   const backdropStyle = useAnimatedStyle(() => ({
     opacity: backdropOpacity.value,
   }));
@@ -69,6 +106,16 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
   }));
 
   if (Platform.OS === 'web') {
+    const handleWebDragEnd = (
+      _event: MouseEvent | TouchEvent | PointerEvent,
+      info: PanInfo,
+    ) => {
+      if (info.offset.y > 75 || info.velocity.y > 450) {
+        haptic('selection');
+        onClose();
+      }
+    };
+
     return (
       <AnimatePresence>
         {visible ? (
@@ -86,13 +133,16 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
                 flexDirection: 'column',
                 justifyContent: 'flex-end',
               }}>
-              {/* 半透明遮罩 */}
+              {/* 半透明遮罩（点击关闭） */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2, ease: 'easeOut' }}
-                onClick={onClose}
+                onClick={() => {
+                  haptic('selection');
+                  onClose();
+                }}
                 style={{
                   position: 'absolute',
                   inset: 0,
@@ -102,8 +152,12 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
                 }}
               />
 
-              {/* 底部实色弹层 */}
+              {/* 底部实色弹层（支持向下拖拽关闭） */}
               <motion.div
+                drag="y"
+                dragConstraints={{ top: 0, bottom: 0 }}
+                dragElastic={{ top: 0, bottom: 0.35 }}
+                onDragEnd={handleWebDragEnd}
                 initial={{ y: '100%' }}
                 animate={{ y: 0 }}
                 exit={{ y: '100%' }}
@@ -128,15 +182,22 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
                   display: 'flex',
                   flexDirection: 'column',
                 }}>
-                {/* 36×4 拖拽指示条 */}
-                <View accessible={false} style={styles.handleWrapper}>
+                {/* 36×4 拖拽指示条（可点击或下滑关闭） */}
+                <Pressable
+                  onPress={() => {
+                    haptic('selection');
+                    onClose();
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel="下滑或点击收起弹窗"
+                  style={styles.handleWrapper}>
                   <View
                     style={[
                       styles.handleBar,
                       { backgroundColor: palette.line },
                     ]}
                   />
-                </View>
+                </Pressable>
 
                 {title ? (
                   <View style={styles.headerRow}>
@@ -144,7 +205,10 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
                       {title}
                     </Text>
                     <Pressable
-                      onPress={onClose}
+                      onPress={() => {
+                        haptic('selection');
+                        onClose();
+                      }}
                       hitSlop={12}
                       accessibilityRole="button"
                       accessibilityLabel="关闭"
@@ -189,7 +253,10 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
           ]}>
           <Pressable
             style={styles.flex1}
-            onPress={onClose}
+            onPress={() => {
+              haptic('selection');
+              onClose();
+            }}
             accessibilityRole="button"
             accessibilityLabel="关闭弹窗"
           />
@@ -207,7 +274,10 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
             sheetStyle,
           ]}>
           {/* 36×4 拖拽指示条 */}
-          <View accessible={false} style={styles.handleWrapper}>
+          <View
+            {...handlePanResponder.panHandlers}
+            accessible={false}
+            style={styles.handleWrapper}>
             <View
               style={[
                 styles.handleBar,
@@ -222,7 +292,10 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
                 {title}
               </Text>
               <Pressable
-                onPress={onClose}
+                onPress={() => {
+                  haptic('selection');
+                  onClose();
+                }}
                 hitSlop={12}
                 accessibilityRole="button"
                 accessibilityLabel="关闭"
@@ -274,7 +347,8 @@ const styles = StyleSheet.create({
   },
   handleWrapper: {
     alignItems: 'center',
-    paddingBottom: 12,
+    paddingVertical: 8,
+    marginBottom: 4,
   },
   handleBar: {
     width: 36,

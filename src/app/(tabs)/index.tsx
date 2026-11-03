@@ -81,8 +81,33 @@ export default function TodayScreen() {
   const handleToggleComplete = (task: Task) => {
     const nowDone = toggleTaskComplete(task.id);
     if (nowDone) {
-      triggerHaptic('taskDone', hapticEnabled);
+      // 检查是否刚刚完成了全部 Top 3
+      const updatedTop3 = useTodayStore
+        .getState()
+        .tasks.filter((t) => t.isTop3);
+      if (
+        task.isTop3 &&
+        updatedTop3.length === 3 &&
+        updatedTop3.every((t) => t.completedAt !== null)
+      ) {
+        triggerHaptic('complete', hapticEnabled);
+        showSnackbar('今天的重点已完成');
+      } else {
+        triggerHaptic('taskDone', hapticEnabled);
+      }
+    } else {
+      triggerHaptic('selection', hapticEnabled);
     }
+  };
+
+  const handleLongPressTask = () => {
+    setEditMode((prev) => {
+      const next = !prev;
+      if (next) {
+        showSnackbar('已进入排序管理模式');
+      }
+      return next;
+    });
   };
 
   const handleOpenAddTask = (isTop3: boolean) => {
@@ -101,13 +126,19 @@ export default function TodayScreen() {
     if (editingTask) {
       const res = updateTask(editingTask.id, draft);
       if (res.ok) {
+        triggerHaptic('taskDone', hapticEnabled);
         showSnackbar('已更新任务');
+      } else {
+        triggerHaptic('warning', hapticEnabled);
       }
       return res;
     }
     const res = addTask(draft);
     if (res.ok) {
+      triggerHaptic('taskDone', hapticEnabled);
       showSnackbar('已添加任务');
+    } else {
+      triggerHaptic('warning', hapticEnabled);
     }
     return res;
   };
@@ -129,125 +160,136 @@ export default function TodayScreen() {
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-canvas dark:bg-canvas-dark">
       <TabPageTransition routeKey="today">
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 40 }}
-        className="flex-1 px-6">
-        {/* 顶部日期与设置入口 */}
-        <View className="pt-4 pb-6">
-          <View className="flex-row items-center justify-between mb-2">
-            <Text className="text-caption text-ink-muted dark:text-ink-muted-dark">
-              {formatTodayHeaderDate()}
-            </Text>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 40 }}
+          className="flex-1 px-6">
+          {/* 顶部日期与设置入口 */}
+          <View className="pt-4 pb-6">
+            <View className="flex-row items-center justify-between mb-2">
+              <Text className="text-caption text-ink-muted dark:text-ink-muted-dark">
+                {formatTodayHeaderDate()}
+              </Text>
 
-            <Pressable
-              onPress={() => router.push('/settings')}
-              hitSlop={10}
-              accessibilityRole="button"
-              accessibilityLabel="打开设置"
-              className="w-12 h-12 -mr-2 items-center justify-center rounded-full">
-              <Ionicons name="settings-outline" size={24} color={palette.ink} />
-            </Pressable>
+              <Pressable
+                onPress={() => {
+                  triggerHaptic('selection', hapticEnabled);
+                  router.push('/settings');
+                }}
+                hitSlop={10}
+                accessibilityRole="button"
+                accessibilityLabel="打开设置"
+                className="w-12 h-12 -mr-2 items-center justify-center rounded-full">
+                <Ionicons name="settings-outline" size={24} color={palette.ink} />
+              </Pressable>
+            </View>
+
+            <Text className="text-h1 text-ink dark:text-ink-dark">
+              {getGreetingByHour()}
+            </Text>
           </View>
 
-          <Text className="text-h1 text-ink dark:text-ink-dark">
-            {getGreetingByHour()}
-          </Text>
-        </View>
+          {tasks.length === 0 ? (
+            <View className="gap-8">
+              <View className="rounded-xl border border-dashed border-line dark:border-line-dark bg-surface dark:bg-surface-dark">
+                <EmptyState
+                  icon="sunny-outline"
+                  description="今天还没有任务，从最重要的一件事开始。"
+                  actionLabel="新建第一个重点"
+                  onAction={() => handleOpenAddTask(true)}
+                />
+              </View>
 
-        {tasks.length === 0 ? (
-          <View className="gap-8">
-            <View className="rounded-xl border border-dashed border-line dark:border-line-dark bg-surface dark:bg-surface-dark">
-              <EmptyState
-                icon="sunny-outline"
-                description="今天还没有任务，从最重要的一件事开始。"
-                actionLabel="新建第一个重点"
-                onAction={() => handleOpenAddTask(true)}
+              <ProgressCard
+                progress={progress}
+                focusSessionsCount={focusSummary.count}
+                focusMinutesTotal={focusSummary.minutes}
+                onPressGoFocus={() => router.push('/(tabs)/focus')}
+                onPressAddTask={() => handleOpenAddTask(true)}
+                onPressDailyReview={() => setReviewVisible(true)}
               />
             </View>
+          ) : (
+            <View className="gap-8">
+              {/* 今日重点 Top 3 */}
+              <TopThreeSection
+                top3Tasks={top3Tasks}
+                editMode={editMode}
+                onToggleEditMode={() => setEditMode((v) => !v)}
+                onToggleComplete={handleToggleComplete}
+                onPressTask={handleOpenEditTask}
+                onLongPressTask={handleLongPressTask}
+                onAddSlot={() => handleOpenAddTask(true)}
+                onRequestDelete={handleDeleteTask}
+                onMoveOrder={handleMoveOrder}
+              />
 
-            <ProgressCard
-              progress={progress}
-              focusSessionsCount={focusSummary.count}
-              focusMinutesTotal={focusSummary.minutes}
-              onPressGoFocus={() => router.push('/(tabs)/focus')}
-              onPressAddTask={() => handleOpenAddTask(true)}
-              onPressDailyReview={() => setReviewVisible(true)}
-            />
-          </View>
-        ) : (
-          <View className="gap-8">
-            {/* 今日重点 Top 3 */}
-            <TopThreeSection
-              top3Tasks={top3Tasks}
-              editMode={editMode}
-              onToggleEditMode={() => setEditMode((v) => !v)}
-              onToggleComplete={handleToggleComplete}
-              onPressTask={handleOpenEditTask}
-              onAddSlot={() => handleOpenAddTask(true)}
-              onRequestDelete={handleDeleteTask}
-              onMoveOrder={handleMoveOrder}
-            />
+              {/* 今日进度与专注摘要 */}
+              <ProgressCard
+                progress={progress}
+                focusSessionsCount={focusSummary.count}
+                focusMinutesTotal={focusSummary.minutes}
+                onPressGoFocus={() => router.push('/(tabs)/focus')}
+                onPressAddTask={() => handleOpenAddTask(false)}
+                onPressDailyReview={() => setReviewVisible(true)}
+              />
 
-            {/* 今日进度与专注摘要 */}
-            <ProgressCard
-              progress={progress}
-              focusSessionsCount={focusSummary.count}
-              focusMinutesTotal={focusSummary.minutes}
-              onPressGoFocus={() => router.push('/(tabs)/focus')}
-              onPressAddTask={() => handleOpenAddTask(false)}
-              onPressDailyReview={() => setReviewVisible(true)}
-            />
+              {/* 其他任务区块 */}
+              <View>
+                <View className="flex-row items-center justify-between mb-4">
+                  <Text className="text-h2 text-ink dark:text-ink-dark">其他任务</Text>
+                  {otherTasks.length > 0 ? (
+                    <Pressable
+                      onPress={() => {
+                        triggerHaptic('selection', hapticEnabled);
+                        setEditMode((v) => !v);
+                      }}
+                      hitSlop={10}
+                      accessibilityRole="button"
+                      accessibilityLabel={editMode ? '完成排序' : '排序或管理任务'}
+                      className="min-h-[36px] px-2 items-center justify-center">
+                      <Text className="text-caption font-semibold text-accent dark:text-accent-dark">
+                        {editMode ? '完成' : '管理'}
+                      </Text>
+                    </Pressable>
+                  ) : null}
+                </View>
 
-            {/* 其他任务区块 */}
-            <View>
-              <View className="flex-row items-center justify-between mb-4">
-                <Text className="text-h2 text-ink dark:text-ink-dark">其他任务</Text>
-                {otherTasks.length > 1 ? (
+                <View className="gap-2">
+                  {otherTasks.map((task, idx) => (
+                    <TaskRow
+                      key={task.id}
+                      task={task}
+                      editMode={editMode}
+                      canMoveUp={idx > 0}
+                      canMoveDown={idx < otherTasks.length - 1}
+                      onToggleComplete={handleToggleComplete}
+                      onPress={handleOpenEditTask}
+                      onLongPress={handleLongPressTask}
+                      onRequestDelete={handleDeleteTask}
+                      onMoveOrder={handleMoveOrder}
+                    />
+                  ))}
+
+                  {/* 列表底部的虚线添加行（Section 7.1：不使用悬浮按钮，避免遮挡） */}
                   <Pressable
-                    onPress={() => setEditMode((v) => !v)}
-                    hitSlop={10}
+                    onPress={() => {
+                      triggerHaptic('selection', hapticEnabled);
+                      handleOpenAddTask(false);
+                    }}
                     accessibilityRole="button"
-                    accessibilityLabel={editMode ? '完成排序' : '排序或管理任务'}
-                    className="min-h-[36px] px-2 items-center justify-center">
-                    <Text className="text-caption font-semibold text-accent dark:text-accent-dark">
-                      {editMode ? '完成' : '管理'}
+                    accessibilityLabel="添加任务"
+                    className="min-h-[56px] rounded-lg border border-dashed border-line dark:border-line-dark px-4 py-3 flex-row items-center justify-center mt-1">
+                    <Ionicons name="add-circle-outline" size={20} color={palette.accent} />
+                    <Text className="text-body-strong text-accent dark:text-accent-dark ml-2">
+                      添加任务
                     </Text>
                   </Pressable>
-                ) : null}
-              </View>
-
-              <View className="gap-2">
-                {otherTasks.map((task, idx) => (
-                  <TaskRow
-                    key={task.id}
-                    task={task}
-                    editMode={editMode}
-                    canMoveUp={idx > 0}
-                    canMoveDown={idx < otherTasks.length - 1}
-                    onToggleComplete={handleToggleComplete}
-                    onPress={handleOpenEditTask}
-                    onRequestDelete={handleDeleteTask}
-                    onMoveOrder={handleMoveOrder}
-                  />
-                ))}
-
-                {/* 列表底部的虚线添加行（Section 7.1：不使用悬浮按钮，避免遮挡） */}
-                <Pressable
-                  onPress={() => handleOpenAddTask(false)}
-                  accessibilityRole="button"
-                  accessibilityLabel="添加任务"
-                  className="min-h-[56px] rounded-lg border border-dashed border-line dark:border-line-dark px-4 py-3 flex-row items-center justify-center mt-1">
-                  <Ionicons name="add-circle-outline" size={20} color={palette.accent} />
-                  <Text className="text-body-strong text-accent dark:text-accent-dark ml-2">
-                    添加任务
-                  </Text>
-                </Pressable>
+                </View>
               </View>
             </View>
-          </View>
-        )}
-      </ScrollView>
+          )}
+        </ScrollView>
       </TabPageTransition>
 
       {/* 新建 / 编辑任务底部弹层 */}
@@ -269,6 +311,7 @@ export default function TodayScreen() {
         focusMinutesTotal={focusSummary.minutes}
         note={dailyReviewNote}
         onSaveNote={(nextNote) => {
+          triggerHaptic('taskDone', hapticEnabled);
           setDailyReviewNote(nextNote);
           showSnackbar('已保存今日复盘');
         }}

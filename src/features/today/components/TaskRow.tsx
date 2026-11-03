@@ -8,8 +8,10 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { SwipeableRow } from '@/components/ui/SwipeableRow';
 import { Task } from '@/features/today/types';
 import { useResolvedTheme } from '@/hooks/use-resolved-theme';
+import { useHaptic } from '@/lib/haptics';
 import { getCardSurfaceStyle, tabularNumsStyle } from '@/theme/tokens';
 
 export type TaskRowProps = {
@@ -20,6 +22,7 @@ export type TaskRowProps = {
   canMoveDown?: boolean;
   onToggleComplete: (task: Task) => void;
   onPress: (task: Task) => void;
+  onLongPress?: (task: Task) => void;
   onRequestDelete?: (task: Task) => void;
   onMoveOrder?: (task: Task, direction: 'up' | 'down') => void;
 };
@@ -28,11 +31,10 @@ export type TaskRowProps = {
  * Section 6.2 & 8.2: 任务行（TaskRow）
  * - 高度：最小 56，多行描述可自适应
  * - 圆角：lg（20）
- * - 背景：surface，间距 8 分隔
- * - 勾选框：24×24 圆形，边框 2px line；完成时填充 success + 白色对勾（180ms easeOutCubic 缩放弹入）
+ * - 勾选框：24×24 圆形，完成时填充 success + 白色对勾（180ms easeOutCubic 缩放弹入 + 震动反馈）
  * - 标题：Body Strong；完成后 ink-subtle + 删除线（200ms 从左到右绘制）
- * - 副标题：Caption，ink-muted，可选
- * - Top 3 标记：24×24 圆角 8 的 accent-soft 底 + accent 序号文字
+ * - 左滑：露出右侧 danger 删除按钮
+ * - 长按：触发触觉反馈并进入排序编辑态
  */
 export const TaskRow = React.memo(function TaskRow({
   task,
@@ -42,14 +44,17 @@ export const TaskRow = React.memo(function TaskRow({
   canMoveDown = false,
   onToggleComplete,
   onPress,
+  onLongPress,
   onRequestDelete,
   onMoveOrder,
 }: TaskRowProps) {
   const { theme, palette } = useResolvedTheme();
+  const { haptic } = useHaptic();
   const isCompleted = task.completedAt !== null;
 
   const checkScale = useSharedValue(isCompleted ? 1 : 0.8);
   const strikeProgress = useSharedValue(isCompleted ? 1 : 0);
+  const rowScale = useSharedValue(1);
 
   useEffect(() => {
     if (isCompleted) {
@@ -83,10 +88,38 @@ export const TaskRow = React.memo(function TaskRow({
     opacity: strikeProgress.value,
   }));
 
-  return (
-    <View
-      style={getCardSurfaceStyle(theme)}
-      className="min-h-[56px] rounded-lg px-4 py-3 flex-row items-center">
+  const rowPressAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: rowScale.value }],
+  }));
+
+  const handlePressIn = () => {
+    rowScale.value = withTiming(0.985, {
+      duration: 100,
+      easing: Easing.out(Easing.quad),
+    });
+  };
+
+  const handlePressOut = () => {
+    rowScale.value = withTiming(1, {
+      duration: 120,
+      easing: Easing.out(Easing.quad),
+    });
+  };
+
+  const rowContent = (
+    <Animated.View
+      style={[
+        getCardSurfaceStyle(theme),
+        {
+          minHeight: 56,
+          borderRadius: 20,
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          flexDirection: 'row',
+          alignItems: 'center',
+        },
+        rowPressAnimatedStyle,
+      ]}>
       {/* 勾选触控区域 ≥ 48×48 */}
       <Pressable
         onPress={() => onToggleComplete(task)}
@@ -115,11 +148,23 @@ export const TaskRow = React.memo(function TaskRow({
         </Animated.View>
       </Pressable>
 
-      {/* 标题与副标题点击进入编辑 */}
+      {/* 标题与副标题：点击进入编辑，长按进入排序 */}
       <Pressable
-        onPress={() => onPress(task)}
+        onPress={() => {
+          haptic('selection');
+          onPress(task);
+        }}
+        onLongPress={() => {
+          if (onLongPress) {
+            haptic('longPress');
+            onLongPress(task);
+          }
+        }}
+        delayLongPress={320}
+        onPressIn={handlePressIn}
+        onPressOut={handlePressOut}
         accessibilityRole="button"
-        accessibilityLabel={`编辑任务：${task.title}`}
+        accessibilityLabel={`编辑任务：${task.title}（长按可排序，左滑可删除）`}
         className="flex-1 py-0.5 pr-2 justify-center">
         <View className="self-start relative justify-center">
           <Text
@@ -158,7 +203,10 @@ export const TaskRow = React.memo(function TaskRow({
           {onMoveOrder ? (
             <>
               <Pressable
-                onPress={() => onMoveOrder(task, 'up')}
+                onPress={() => {
+                  haptic('selection');
+                  onMoveOrder(task, 'up');
+                }}
                 disabled={!canMoveUp}
                 accessibilityRole="button"
                 accessibilityLabel="上移任务"
@@ -168,7 +216,10 @@ export const TaskRow = React.memo(function TaskRow({
                 <Ionicons name="chevron-up-outline" size={18} color={palette.ink} />
               </Pressable>
               <Pressable
-                onPress={() => onMoveOrder(task, 'down')}
+                onPress={() => {
+                  haptic('selection');
+                  onMoveOrder(task, 'down');
+                }}
                 disabled={!canMoveDown}
                 accessibilityRole="button"
                 accessibilityLabel="下移任务"
@@ -201,6 +252,16 @@ export const TaskRow = React.memo(function TaskRow({
           </Text>
         </View>
       ) : null}
-    </View>
+    </Animated.View>
+  );
+
+  if (!onRequestDelete || editMode) {
+    return rowContent;
+  }
+
+  return (
+    <SwipeableRow onDelete={() => onRequestDelete(task)}>
+      {rowContent}
+    </SwipeableRow>
   );
 });
