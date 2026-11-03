@@ -1,4 +1,3 @@
-import * as SystemUI from 'expo-system-ui';
 import { Platform, TextStyle, ViewStyle } from 'react-native';
 
 export type ResolvedTheme = 'light' | 'dark';
@@ -513,58 +512,6 @@ export const ColorSchemes: Record<ColorSchemeId, ColorSchemeItem> = {
 export const COLOR_SCHEMES_LIST = Object.values(ColorSchemes);
 
 export const DEFAULT_COLOR_SCHEME_ID: ColorSchemeId = 'chatgpt-emerald';
-
-/**
- * 同步将当前主题调色板写入 CSS 变量（兼容 NativeWind 原生 rootVariables 与 Web :root）
- * 避免通过 Appearance.setColorScheme 触发 Android 原生 Activity 重建导致 200ms+ 卡顿
- */
-export function syncThemeCssVariables(palette: ThemePalette, isDark: boolean): void {
-  const varsMap: Record<string, string> = {
-    '--color-canvas': palette.canvas,
-    '--color-surface': palette.surface,
-    '--color-surface-muted': palette.surfaceMuted,
-    '--color-surface-selected': palette.surfaceSelected,
-    '--color-line': palette.line,
-    '--color-ink': palette.ink,
-    '--color-ink-muted': palette.inkMuted,
-    '--color-ink-subtle': palette.inkSubtle,
-    '--color-accent': palette.accent,
-    '--color-accent-soft': palette.accentSoft,
-    '--color-on-accent': palette.onAccent,
-    '--color-success': palette.success,
-    '--color-warning': palette.warning,
-    '--color-danger': palette.danger,
-  };
-
-  if (Platform.OS === 'web') {
-    if (typeof document !== 'undefined') {
-      const root = document.documentElement;
-      root.classList.toggle('dark', isDark);
-      for (const [key, val] of Object.entries(varsMap)) {
-        root.style.setProperty(key, val);
-      }
-    }
-    return;
-  }
-
-  try {
-    const cssInteropGlobal = (globalThis as Record<string, any>).__css_interop;
-    const rootVariables: Map<string, { set?: (v: string) => void }> | undefined =
-      cssInteropGlobal?.rootVariables;
-    if (rootVariables && typeof rootVariables.get === 'function') {
-      for (const [key, val] of Object.entries(varsMap)) {
-        const obs = rootVariables.get(key);
-        if (obs && typeof obs.set === 'function') {
-          obs.set(val);
-        }
-      }
-    }
-  } catch {
-    // 忽略降级异常
-  }
-
-  SystemUI.setBackgroundColorAsync(palette.canvas).catch(() => {});
-}
 
 /**
  * 保持对旧代码直接引入 Palette / CategoryChartColors 的兼容

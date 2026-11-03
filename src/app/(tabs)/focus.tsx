@@ -161,12 +161,14 @@ export default function FocusScreen() {
     <SafeAreaView
       edges={['top']}
       style={{ backgroundColor: palette.canvas }}
-      className="flex-1 bg-canvas dark:bg-canvas-dark px-6">
+      className="flex-1 px-6">
       <TabPageTransition routeKey="focus">
         <View className="flex-1 justify-between py-6">
           {/* 顶部：标题 + 模式切换 */}
           <View>
-            <Text className="text-h1 text-ink dark:text-ink-dark text-center mb-6">
+            <Text
+              style={{ color: palette.ink }}
+              className="text-h1 text-center mb-6">
               专注
             </Text>
             <ModeSwitch mode={mode} onSelectMode={handleSelectMode} />
@@ -216,19 +218,21 @@ export default function FocusScreen() {
           {/* 底部：时长配比与今日统计一行 */}
           <View className="items-center gap-1.5 pb-2">
             <Text
-              style={tabularNumsStyle}
-              className="text-caption text-ink-muted dark:text-ink-muted-dark">
+              style={[tabularNumsStyle, { color: palette.inkMuted }]}
+              className="text-caption">
               专注 {focusMinutes} 分钟 · 休息 {shortBreakMinutes} 分钟 · 长休 {longBreakMinutes} 分钟
             </Text>
 
             {todayStats.count === 0 ? (
-              <Text className="text-micro text-ink-subtle dark:text-ink-subtle-dark">
+              <Text
+                style={{ color: palette.inkSubtle }}
+                className="text-micro">
                 还没有专注记录，开始第一个 {focusMinutes} 分钟。
               </Text>
             ) : (
               <Text
-                style={tabularNumsStyle}
-                className="text-micro text-ink-subtle dark:text-ink-subtle-dark">
+                style={[tabularNumsStyle, { color: palette.inkSubtle }]}
+                className="text-micro">
                 今日已完成 {todayStats.count} 次专注 · 共 {todayStats.minutes} 分钟
               </Text>
             )}

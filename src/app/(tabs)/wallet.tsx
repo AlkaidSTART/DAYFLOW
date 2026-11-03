@@ -165,7 +165,7 @@ export default function WalletScreen() {
     <SafeAreaView
       edges={['top']}
       style={{ backgroundColor: palette.canvas }}
-      className="flex-1 bg-canvas dark:bg-canvas-dark">
+      className="flex-1">
       <TabPageTransition routeKey="wallet">
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -173,7 +173,9 @@ export default function WalletScreen() {
           className="flex-1 px-6">
           {/* 顶部标题与月份切换 */}
           <View className="pt-4 pb-6 flex-row items-center justify-between">
-            <Text className="text-h1 text-ink dark:text-ink-dark">钱包</Text>
+            <Text style={{ color: palette.ink }} className="text-h1">
+              钱包
+            </Text>
 
             <Pressable
               onPress={() => {
@@ -182,8 +184,11 @@ export default function WalletScreen() {
               }}
               accessibilityRole="button"
               accessibilityLabel={`当前月份：${formatMonthLabel(selectedMonth)}，点击切换`}
-              className="min-h-[40px] px-3.5 py-1.5 rounded-md bg-surface-muted dark:bg-surface-muted-dark flex-row items-center">
-              <Text className="text-caption font-semibold text-ink dark:text-ink-dark mr-1">
+              style={{ backgroundColor: palette.surfaceMuted }}
+              className="min-h-[40px] px-3.5 py-1.5 rounded-md flex-row items-center">
+              <Text
+                style={{ color: palette.ink }}
+                className="text-caption font-semibold mr-1">
                 {formatMonthLabel(selectedMonth)}
               </Text>
               <Ionicons name="chevron-down-outline" size={16} color={palette.inkMuted} />
@@ -215,43 +220,57 @@ export default function WalletScreen() {
 
             {/* 本月概览 */}
             <View>
-              <Text className="text-h2 text-ink dark:text-ink-dark mb-4">本月概览</Text>
+              <Text style={{ color: palette.ink }} className="text-h2 mb-4">
+                本月概览
+              </Text>
               <View
                 style={getCardSurfaceStyle(theme, palette)}
                 className="rounded-lg p-4 flex-row items-center justify-between">
                 <View className="flex-1">
-                  <Text className="text-caption text-ink-muted dark:text-ink-muted-dark mb-1">
+                  <Text
+                    style={{ color: palette.inkMuted }}
+                    className="text-caption mb-1">
                     收入
                   </Text>
                   <Text
-                    style={tabularNumsStyle}
-                    className="text-body-strong text-success dark:text-success-dark">
+                    style={[tabularNumsStyle, { color: palette.success }]}
+                    className="text-body-strong">
                     +{formatCurrency(summary.incomeCents)}
                   </Text>
                 </View>
 
-                <View className="w-[1px] h-8 bg-line dark:bg-line-dark mx-3" />
+                <View
+                  style={{ backgroundColor: palette.line }}
+                  className="w-[1px] h-8 mx-3"
+                />
 
                 <View className="flex-1">
-                  <Text className="text-caption text-ink-muted dark:text-ink-muted-dark mb-1">
+                  <Text
+                    style={{ color: palette.inkMuted }}
+                    className="text-caption mb-1">
                     支出
                   </Text>
                   <Text
-                    style={tabularNumsStyle}
-                    className="text-body-strong text-ink dark:text-ink-dark">
+                    style={[tabularNumsStyle, { color: palette.ink }]}
+                    className="text-body-strong">
                     -{formatCurrency(summary.spentCents)}
                   </Text>
                 </View>
 
-                <View className="w-[1px] h-8 bg-line dark:bg-line-dark mx-3" />
+                <View
+                  style={{ backgroundColor: palette.line }}
+                  className="w-[1px] h-8 mx-3"
+                />
 
                 <View className="flex-1">
-                  <Text className="text-caption text-ink-muted dark:text-ink-muted-dark mb-1">
+                  <Text
+                    style={{ color: palette.inkMuted }}
+                    className="text-caption mb-1">
                     结余
                   </Text>
                   <Text
-                    style={tabularNumsStyle}
-                    className="text-body-strong text-ink dark:text-ink-dark">
+                    style={[tabularNumsStyle, { color: palette.ink }]}
+                    className="text-body-strong">
                     {formatCurrency(summary.balanceCents)}
                   </Text>
                 </View>
@@ -269,7 +288,7 @@ export default function WalletScreen() {
             <View>
               <View className="flex-row items-center justify-between mb-4">
                 <View className="flex-row items-center">
-                  <Text className="text-h2 text-ink dark:text-ink-dark">
+                  <Text style={{ color: palette.ink }} className="text-h2">
                     {activeFilterCategory
                       ? `${activeFilterCategory.name}账单`
                       : '最近账单'}
@@ -408,13 +427,16 @@ export default function WalletScreen() {
               }}
               accessibilityRole="radio"
               accessibilityState={{ checked: selectedMonth === currentMonthKey }}
-              className="min-h-[52px] rounded-md px-4 py-3 bg-surface-selected dark:bg-surface-selected-dark flex-row items-center justify-between">
-              <Text className="text-body-strong text-ink dark:text-ink-dark">
+              style={{ backgroundColor: palette.surfaceSelected }}
+              className="min-h-[52px] rounded-md px-4 py-3 flex-row items-center justify-between">
+              <Text style={{ color: palette.ink }} className="text-body-strong">
                 本月（{currentMonthKey}）
               </Text>
               <Ionicons name="checkmark-circle" size={20} color={palette.accent} />
             </Pressable>
-            <Text className="text-micro text-ink-subtle dark:text-ink-subtle-dark px-1 mt-1">
+            <Text
+              style={{ color: palette.inkSubtle }}
+              className="text-micro px-1 mt-1">
               历史月份归档统计将在后续版本开放。
             </Text>
           </View>

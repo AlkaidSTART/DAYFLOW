@@ -168,11 +168,10 @@ export const TaskRow = React.memo(function TaskRow({
         className="flex-1 py-0.5 pr-2 justify-center">
         <View className="self-start relative justify-center">
           <Text
-            className={`${
-              isCompleted
-                ? 'text-body text-ink-subtle dark:text-ink-subtle-dark'
-                : 'text-body-strong text-ink dark:text-ink-dark'
-            }`}>
+            style={{
+              color: isCompleted ? palette.inkSubtle : palette.ink,
+            }}
+            className={isCompleted ? 'text-body' : 'text-body-strong'}>
             {task.title}
           </Text>
           {/* 200ms 从左到右绘制删除线 */}
@@ -191,7 +190,9 @@ export const TaskRow = React.memo(function TaskRow({
         </View>
 
         {task.subtitle ? (
-          <Text className="text-caption text-ink-muted dark:text-ink-muted-dark mt-0.5">
+          <Text
+            style={{ color: palette.inkMuted }}
+            className="text-caption mt-0.5">
             {task.subtitle}
           </Text>
         ) : null}
@@ -210,7 +211,8 @@ export const TaskRow = React.memo(function TaskRow({
                 disabled={!canMoveUp}
                 accessibilityRole="button"
                 accessibilityLabel="上移任务"
-                className={`w-9 h-9 rounded-sm items-center justify-center bg-surface-muted dark:bg-surface-muted-dark ${
+                style={{ backgroundColor: palette.surfaceMuted }}
+                className={`w-9 h-9 rounded-sm items-center justify-center ${
                   !canMoveUp ? 'opacity-35' : ''
                 }`}>
                 <Ionicons name="chevron-up-outline" size={18} color={palette.ink} />
@@ -223,7 +225,8 @@ export const TaskRow = React.memo(function TaskRow({
                 disabled={!canMoveDown}
                 accessibilityRole="button"
                 accessibilityLabel="下移任务"
-                className={`w-9 h-9 rounded-sm items-center justify-center bg-surface-muted dark:bg-surface-muted-dark ${
+                style={{ backgroundColor: palette.surfaceMuted }}
+                className={`w-9 h-9 rounded-sm items-center justify-center ${
                   !canMoveDown ? 'opacity-35' : ''
                 }`}>
                 <Ionicons name="chevron-down-outline" size={18} color={palette.ink} />
@@ -236,7 +239,8 @@ export const TaskRow = React.memo(function TaskRow({
               onPress={() => onRequestDelete(task)}
               accessibilityRole="button"
               accessibilityLabel={`删除任务：${task.title}`}
-              className="w-9 h-9 rounded-sm items-center justify-center bg-danger dark:bg-danger-dark ml-1">
+              style={{ backgroundColor: palette.danger }}
+              className="w-9 h-9 rounded-sm items-center justify-center ml-1">
               <Ionicons name="trash-outline" size={17} color="#FFFFFF" />
             </Pressable>
           ) : null}

@@ -85,17 +85,21 @@ export const BillRow = React.memo(function BillRow({
         <View className="flex-row items-center flex-1 mr-3">
           <View
             accessible={false}
-            className="w-[40px] h-[40px] rounded-md bg-surface-muted dark:bg-surface-muted-dark items-center justify-center mr-3">
+            style={{ backgroundColor: palette.surfaceMuted }}
+            className="w-[40px] h-[40px] rounded-md items-center justify-center mr-3">
             <Ionicons name={iconName} size={20} color={palette.ink} />
           </View>
 
           <View className="flex-1">
             <Text
               numberOfLines={1}
-              className="text-body-strong text-ink dark:text-ink-dark">
+              style={{ color: palette.ink }}
+              className="text-body-strong">
               {displayTitle}
             </Text>
-            <Text className="text-caption text-ink-muted dark:text-ink-muted-dark mt-0.5">
+            <Text
+              style={{ color: palette.inkMuted }}
+              className="text-caption mt-0.5">
               {categoryName} · {timeText}
             </Text>
           </View>
@@ -103,12 +107,13 @@ export const BillRow = React.memo(function BillRow({
 
         {/* 右侧金额 */}
         <Text
-          style={tabularNumsStyle}
-          className={`text-body-strong ${
-            bill.type === 'income'
-              ? 'text-success dark:text-success-dark'
-              : 'text-ink dark:text-ink-dark'
-          }`}>
+          style={[
+            tabularNumsStyle,
+            {
+              color: bill.type === 'income' ? palette.success : palette.ink,
+            },
+          ]}
+          className="text-body-strong">
           {amountText}
         </Text>
       </Pressable>

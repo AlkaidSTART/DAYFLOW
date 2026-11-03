@@ -39,14 +39,19 @@ export function BannerTip({
       }}
       className={`flex-row items-center rounded-md px-4 py-3 ${className}`}>
       <Ionicons name={iconName} size={20} color={iconColor} />
-      <Text className="flex-1 text-caption text-ink dark:text-ink-dark ml-2.5">{message}</Text>
+      <Text
+        style={{ color: palette.ink }}
+        className="flex-1 text-caption ml-2.5">
+        {message}
+      </Text>
       {actionLabel && onAction ? (
         <Pressable
           onPress={onAction}
           hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel={actionLabel}
-          className="ml-2 px-2.5 py-1 rounded-sm bg-surface dark:bg-surface-dark items-center justify-center">
+          style={{ backgroundColor: palette.surface }}
+          className="ml-2 px-2.5 py-1 rounded-sm items-center justify-center">
           <Text
             style={{ color: iconColor }}
             className="text-caption font-semibold">

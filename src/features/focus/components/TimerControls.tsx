@@ -58,10 +58,11 @@ export function TimerControls({
         />
         <Text
           numberOfLines={1}
+          style={{
+            color: linkedTaskTitle ? palette.ink : palette.inkMuted,
+          }}
           className={`text-body ml-2 max-w-[240px] ${
-            linkedTaskTitle
-              ? 'text-ink dark:text-ink-dark font-medium'
-              : 'text-ink-muted dark:text-ink-muted-dark'
+            linkedTaskTitle ? 'font-medium' : ''
           }`}>
           {linkedTaskTitle ? `关联：${linkedTaskTitle}` : '选择任务'}
         </Text>

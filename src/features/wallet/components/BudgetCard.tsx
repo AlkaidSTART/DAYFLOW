@@ -54,11 +54,14 @@ export function BudgetCard({ summary, onPressEditBudget }: BudgetCardProps) {
       ? palette.warning
       : palette.accent;
 
-  const statusTextColorClass = summary.isOverspent
-    ? 'text-danger dark:text-danger-dark font-semibold'
+  const statusTextColor = summary.isOverspent
+    ? palette.danger
     : summary.isWarning
-      ? 'text-warning dark:text-warning-dark font-semibold'
-      : 'text-ink-muted dark:text-ink-muted-dark';
+      ? palette.warning
+      : palette.inkMuted;
+
+  const statusTextWeightClass =
+    summary.isOverspent || summary.isWarning ? 'font-semibold' : '';
 
   const handleOpenEdit = () => {
     haptic('selection');
@@ -71,13 +74,15 @@ export function BudgetCard({ summary, onPressEditBudget }: BudgetCardProps) {
         style={getCardSurfaceStyle(theme, palette)}
         className="rounded-xl p-5">
         <View className="flex-row items-center justify-between mb-2">
-          <Text className="text-caption text-ink-muted dark:text-ink-muted-dark">
+          <Text style={{ color: palette.inkMuted }} className="text-caption">
             本月预算
           </Text>
         </View>
 
         <View className="py-2">
-          <Text className="text-body text-ink-muted dark:text-ink-muted-dark mb-4">
+          <Text
+            style={{ color: palette.inkMuted }}
+            className="text-body mb-4">
             还没有设置本月预算，设定后可查看每日建议可用额度。
           </Text>
           <View className="flex-row">
@@ -114,7 +119,7 @@ export function BudgetCard({ summary, onPressEditBudget }: BudgetCardProps) {
         style={getCardSurfaceStyle(theme, palette)}
         className="rounded-xl p-5">
         <View className="flex-row items-center justify-between mb-2">
-          <Text className="text-caption text-ink-muted dark:text-ink-muted-dark">
+          <Text style={{ color: palette.inkMuted }} className="text-caption">
             本月预算
           </Text>
           <View className="flex-row items-center py-0.5">
@@ -128,8 +133,8 @@ export function BudgetCard({ summary, onPressEditBudget }: BudgetCardProps) {
 
         <View className="flex-row items-baseline justify-between mb-3">
           <Text
-            style={tabularNumsStyle}
-            className="text-display text-ink dark:text-ink-dark">
+            style={[tabularNumsStyle, { color: palette.ink }]}
+            className="text-display">
             {formatCurrency(summary.budgetCents)}
           </Text>
 
@@ -150,15 +155,17 @@ export function BudgetCard({ summary, onPressEditBudget }: BudgetCardProps) {
               />
             ) : null}
             <Text
-              style={tabularNumsStyle}
-              className={`text-caption ${statusTextColorClass}`}>
+              style={[tabularNumsStyle, { color: statusTextColor }]}
+              className={`text-caption ${statusTextWeightClass}`}>
               已用 {summary.usagePercent}%
             </Text>
           </View>
         </View>
 
         {/* 进度条 */}
-        <View className="h-[8px] rounded-full bg-surface-muted dark:bg-surface-muted-dark overflow-hidden mb-3">
+        <View
+          style={{ backgroundColor: palette.surfaceMuted }}
+          className="h-[8px] rounded-full overflow-hidden mb-3">
           <Animated.View
             style={[
               {
@@ -175,20 +182,20 @@ export function BudgetCard({ summary, onPressEditBudget }: BudgetCardProps) {
         {summary.isOverspent ? (
           <View className="flex-row items-center justify-between">
             <Text
-              style={tabularNumsStyle}
-              className="text-caption font-semibold text-danger dark:text-danger-dark">
+              style={[tabularNumsStyle, { color: palette.danger }]}
+              className="text-caption font-semibold">
               已超出 {formatCurrency(summary.overspentCents)}
             </Text>
             <Text
-              style={tabularNumsStyle}
-              className="text-caption text-ink-muted dark:text-ink-muted-dark">
+              style={[tabularNumsStyle, { color: palette.inkMuted }]}
+              className="text-caption">
               已支出 {formatCurrency(summary.spentCents)}
             </Text>
           </View>
         ) : (
           <Text
-            style={tabularNumsStyle}
-            className="text-caption text-ink-muted dark:text-ink-muted-dark">
+            style={[tabularNumsStyle, { color: palette.inkMuted }]}
+            className="text-caption">
             剩余 {formatCurrency(summary.remainingCents)} · 每日约{' '}
             {formatCurrency(summary.dailyAllowanceCents)}
           </Text>

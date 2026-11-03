@@ -62,14 +62,18 @@ export function UpdatePromptSheet() {
     <Sheet visible={visible} onClose={closeUpdateSheet} title="发现新版本">
       <View className="gap-4">
         {/* 版本对比胶囊卡 */}
-        <View className="rounded-lg p-4 bg-surface-muted dark:bg-surface-muted-dark flex-row items-center justify-between">
+        <View
+          style={{ backgroundColor: palette.surfaceMuted }}
+          className="rounded-lg p-4 flex-row items-center justify-between">
           <View>
-            <Text className="text-micro text-ink-muted dark:text-ink-muted-dark mb-1">
+            <Text
+              style={{ color: palette.inkMuted }}
+              className="text-micro mb-1">
               当前版本
             </Text>
             <Text
-              style={tabularNumsStyle}
-              className="text-body-strong text-ink dark:text-ink-dark">
+              style={[tabularNumsStyle, { color: palette.ink }]}
+              className="text-body-strong">
               {formatVersionTag(currentVersion)}
             </Text>
           </View>
@@ -97,11 +101,17 @@ export function UpdatePromptSheet() {
         </View>
 
         {/* 更新内容说明 */}
-        <View className="rounded-lg p-4 border border-line dark:border-line-dark">
-          <Text className="text-caption font-semibold text-ink dark:text-ink-dark mb-2">
+        <View
+          style={{ borderColor: palette.line }}
+          className="rounded-lg p-4 border">
+          <Text
+            style={{ color: palette.ink }}
+            className="text-caption font-semibold mb-2">
             {remoteInfo.title || `版本说明 (${formatVersionTag(remoteInfo.version)})`}
           </Text>
-          <Text className="text-caption text-ink-muted dark:text-ink-muted-dark leading-5">
+          <Text
+            style={{ color: palette.inkMuted }}
+            className="text-caption leading-5">
             {remoteInfo.notes}
           </Text>
 
@@ -111,9 +121,12 @@ export function UpdatePromptSheet() {
               hitSlop={8}
               accessibilityRole="link"
               accessibilityLabel="在 GitHub 查看完整 Release 说明"
-              className="mt-3 pt-2 border-t border-line dark:border-line-dark flex-row items-center">
+              style={{ borderTopColor: palette.line }}
+              className="mt-3 pt-2 border-t flex-row items-center">
               <Ionicons name="logo-github" size={14} color={palette.inkMuted} />
-              <Text className="text-micro text-ink-muted dark:text-ink-muted-dark ml-1.5">
+              <Text
+                style={{ color: palette.inkMuted }}
+                className="text-micro ml-1.5">
                 查看 GitHub Release 详情
               </Text>
               <Ionicons
@@ -127,7 +140,7 @@ export function UpdatePromptSheet() {
         </View>
 
         {/* 乐观更新说明（不强制阻断当前操作） */}
-        <Text className="text-micro text-ink-subtle dark:text-ink-subtle-dark">
+        <Text style={{ color: palette.inkSubtle }} className="text-micro">
           更新采用非阻断方式，你可以随时继续记录任务或专注；覆盖安装新版本前建议在「设置 - 数据」中导出备份。
         </Text>
 

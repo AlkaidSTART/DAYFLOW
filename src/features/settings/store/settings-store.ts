@@ -3,10 +3,8 @@ import { create } from 'zustand';
 
 import {
   ColorSchemeId,
-  ColorSchemes,
   DEFAULT_COLOR_SCHEME_ID,
   ResolvedTheme,
-  syncThemeCssVariables,
 } from '@/theme/tokens';
 
 export type ThemePreference = 'light' | 'dark' | 'system';
@@ -49,29 +47,10 @@ export type SettingsState = {
   hideSnackbar: () => void;
 };
 
-function resolveActiveTheme(
-  preference: ThemePreference,
-  systemTheme: ResolvedTheme,
-): ResolvedTheme {
-  if (preference === 'dark') return 'dark';
-  if (preference === 'light') return 'light';
-  return systemTheme;
-}
-
-function applyThemeVariables(
-  preference: ThemePreference,
-  colorSchemeId: ColorSchemeId,
-  systemTheme: ResolvedTheme,
-) {
-  const resolved = resolveActiveTheme(preference, systemTheme);
-  const scheme = ColorSchemes[colorSchemeId] ?? ColorSchemes[DEFAULT_COLOR_SCHEME_ID];
-  syncThemeCssVariables(scheme[resolved], resolved === 'dark');
-}
-
 const initialSystemTheme: ResolvedTheme =
   Appearance.getColorScheme() === 'dark' ? 'dark' : 'light';
 
-export const useSettingsStore = create<SettingsState>((set, get) => ({
+export const useSettingsStore = create<SettingsState>((set) => ({
   themePreference: 'system',
   colorSchemeId: DEFAULT_COLOR_SCHEME_ID,
   systemTheme: initialSystemTheme,
@@ -85,21 +64,9 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   monthStartDay: 1,
   snackbar: null,
 
-  setThemePreference: (themePreference) => {
-    const { colorSchemeId, systemTheme } = get();
-    applyThemeVariables(themePreference, colorSchemeId, systemTheme);
-    set({ themePreference });
-  },
-  setColorSchemeId: (colorSchemeId) => {
-    const { themePreference, systemTheme } = get();
-    applyThemeVariables(themePreference, colorSchemeId, systemTheme);
-    set({ colorSchemeId });
-  },
-  setSystemTheme: (systemTheme) => {
-    const { themePreference, colorSchemeId } = get();
-    applyThemeVariables(themePreference, colorSchemeId, systemTheme);
-    set({ systemTheme });
-  },
+  setThemePreference: (themePreference) => set({ themePreference }),
+  setColorSchemeId: (colorSchemeId) => set({ colorSchemeId }),
+  setSystemTheme: (systemTheme) => set({ systemTheme }),
   setFocusDuration: (field, minutes) => set({ [field]: minutes }),
   setKeepScreenAwake: (keepScreenAwake) => set({ keepScreenAwake }),
   setHapticEnabled: (hapticEnabled) => set({ hapticEnabled }),

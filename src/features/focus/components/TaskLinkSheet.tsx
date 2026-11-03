@@ -37,12 +37,14 @@ export function TaskLinkSheet({
           }}
           accessibilityRole="radio"
           accessibilityState={{ checked: selectedTaskId === null }}
-          className={`min-h-[52px] rounded-md px-4 py-3 flex-row items-center justify-between ${
-            selectedTaskId === null
-              ? 'bg-surface-selected dark:bg-surface-selected-dark'
-              : 'bg-surface-muted dark:bg-surface-muted-dark'
-          }`}>
-          <Text className="text-body text-ink-muted dark:text-ink-muted-dark">
+          style={{
+            backgroundColor:
+              selectedTaskId === null
+                ? palette.surfaceSelected
+                : palette.surfaceMuted,
+          }}
+          className="min-h-[52px] rounded-md px-4 py-3 flex-row items-center justify-between">
+          <Text style={{ color: palette.inkMuted }} className="text-body">
             不关联具体任务（自由专注）
           </Text>
           {selectedTaskId === null ? (
@@ -61,15 +63,20 @@ export function TaskLinkSheet({
               }}
               accessibilityRole="radio"
               accessibilityState={{ checked: selected }}
-              className={`min-h-[52px] rounded-md px-4 py-3 flex-row items-center justify-between ${
-                selected
-                  ? 'bg-surface-selected dark:bg-surface-selected-dark'
-                  : 'bg-surface-muted dark:bg-surface-muted-dark'
-              }`}>
+              style={{
+                backgroundColor: selected
+                  ? palette.surfaceSelected
+                  : palette.surfaceMuted,
+              }}
+              className="min-h-[52px] rounded-md px-4 py-3 flex-row items-center justify-between">
               <View className="flex-1 mr-3">
-                <Text className="text-body-strong text-ink dark:text-ink-dark">{task.title}</Text>
+                <Text style={{ color: palette.ink }} className="text-body-strong">
+                  {task.title}
+                </Text>
                 {task.subtitle ? (
-                  <Text className="text-caption text-ink-muted dark:text-ink-muted-dark mt-0.5">
+                  <Text
+                    style={{ color: palette.inkMuted }}
+                    className="text-caption mt-0.5">
                     {task.subtitle}
                   </Text>
                 ) : null}

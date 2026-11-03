@@ -201,10 +201,11 @@ export function ScrollTimePicker({
         }}
         accessibilityRole="button"
         accessibilityLabel="添加任务提醒时间"
-        className="flex-row items-center justify-between p-3.5 rounded-md bg-surface-muted dark:bg-surface-muted-dark">
+        style={{ backgroundColor: palette.surfaceMuted }}
+        className="flex-row items-center justify-between p-3.5 rounded-md">
         <View className="flex-row items-center">
           <Ionicons name="time-outline" size={18} color={palette.inkMuted} style={{ marginRight: 8 }} />
-          <Text className="text-body text-ink-muted dark:text-ink-muted-dark">
+          <Text style={{ color: palette.inkMuted }} className="text-body">
             添加具体时间（全天任务可留空）
           </Text>
         </View>
@@ -214,12 +215,16 @@ export function ScrollTimePicker({
   }
 
   return (
-    <View className="rounded-lg p-3 bg-surface-muted dark:bg-surface-muted-dark gap-3">
+    <View
+      style={{ backgroundColor: palette.surfaceMuted }}
+      className="rounded-lg p-3 gap-3">
       {/* 头部：已选时间预览 + 清除时间操作 */}
       <View className="flex-row items-center justify-between">
         <View className="flex-row items-center gap-1.5">
           <Ionicons name="alarm-outline" size={16} color={palette.accent} />
-          <Text className="text-caption font-semibold text-accent dark:text-accent-dark">
+          <Text
+            style={{ color: palette.accent }}
+            className="text-caption font-semibold">
             {selectedDate} {selectedHour}:{selectedMinute}
           </Text>
         </View>
@@ -232,7 +237,7 @@ export function ScrollTimePicker({
           hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel="清除时间设为全天">
-          <Text className="text-micro text-ink-muted dark:text-ink-muted-dark">
+          <Text style={{ color: palette.inkMuted }} className="text-micro">
             清除时间
           </Text>
         </Pressable>
@@ -251,17 +256,17 @@ export function ScrollTimePicker({
                   onChangeDate(d);
                 }
               }}
-              className={`flex-1 py-1.5 rounded-sm items-center justify-center ${
-                isSelected
-                  ? 'bg-surface-selected dark:bg-surface-selected-dark'
-                  : 'bg-surface dark:bg-surface-dark'
-              }`}>
+              style={{
+                backgroundColor: isSelected
+                  ? palette.surfaceSelected
+                  : palette.surface,
+              }}
+              className="flex-1 py-1.5 rounded-sm items-center justify-center">
               <Text
-                className={`text-caption ${
-                  isSelected
-                    ? 'font-semibold text-ink dark:text-ink-dark'
-                    : 'text-ink-muted dark:text-ink-muted-dark'
-                }`}>
+                style={{
+                  color: isSelected ? palette.ink : palette.inkMuted,
+                }}
+                className={`text-caption ${isSelected ? 'font-semibold' : ''}`}>
                 {d}
               </Text>
             </Pressable>
@@ -334,17 +339,18 @@ export function ScrollTimePicker({
               }}
               accessibilityRole="button"
               accessibilityLabel={`选择时间 ${preset.label}`}
-              className={`px-2.5 py-1 rounded-sm border ${
-                isSelected
-                  ? 'bg-accent-soft dark:bg-accent-soft-dark border-accent dark:border-accent-dark'
-                  : 'bg-surface dark:bg-surface-dark border-transparent'
-              }`}>
+              style={{
+                backgroundColor: isSelected
+                  ? palette.accentSoft
+                  : palette.surface,
+                borderColor: isSelected ? palette.accent : 'transparent',
+              }}
+              className="px-2.5 py-1 rounded-sm border">
               <Text
-                className={`text-micro ${
-                  isSelected
-                    ? 'font-semibold text-accent dark:text-accent-dark'
-                    : 'text-ink-muted dark:text-ink-muted-dark'
-                }`}>
+                style={{
+                  color: isSelected ? palette.accent : palette.inkMuted,
+                }}
+                className={`text-micro ${isSelected ? 'font-semibold' : ''}`}>
                 {preset.label}
               </Text>
             </Pressable>

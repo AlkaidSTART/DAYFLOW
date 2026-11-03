@@ -138,7 +138,9 @@ function BillFormSheetContent({
 
         {/* 日期快捷选择 */}
         <View>
-          <Text className="text-caption text-ink-muted dark:text-ink-muted-dark mb-2">
+          <Text
+            style={{ color: palette.inkMuted }}
+            className="text-caption mb-2">
             日期
           </Text>
           <View className="flex-row gap-2">
@@ -156,17 +158,17 @@ function BillFormSheetContent({
                   onPress={() => setDatePreset(item.key)}
                   accessibilityRole="radio"
                   accessibilityState={{ checked: active }}
-                  className={`flex-1 min-h-[40px] rounded-md items-center justify-center ${
-                    active
-                      ? 'bg-surface-selected dark:bg-surface-selected-dark'
-                      : 'bg-surface-muted dark:bg-surface-muted-dark'
-                  }`}>
+                  style={{
+                    backgroundColor: active
+                      ? palette.surfaceSelected
+                      : palette.surfaceMuted,
+                  }}
+                  className="flex-1 min-h-[40px] rounded-md items-center justify-center">
                   <Text
-                    className={`text-caption ${
-                      active
-                        ? 'text-ink dark:text-ink-dark font-semibold'
-                        : 'text-ink-muted dark:text-ink-muted-dark'
-                    }`}>
+                    style={{
+                      color: active ? palette.ink : palette.inkMuted,
+                    }}
+                    className={`text-caption ${active ? 'font-semibold' : ''}`}>
                     {item.label}
                   </Text>
                 </Pressable>
@@ -185,8 +187,10 @@ function BillFormSheetContent({
 
         {/* 底部操作区 */}
         {confirmDelete && editingBill && onDelete ? (
-          <View className="p-4 rounded-md bg-surface-muted dark:bg-surface-muted-dark gap-3 mt-1">
-            <Text className="text-caption text-ink dark:text-ink-dark">
+          <View
+            style={{ backgroundColor: palette.surfaceMuted }}
+            className="p-4 rounded-md gap-3 mt-1">
+            <Text style={{ color: palette.ink }} className="text-caption">
               将删除这条账单，且无法恢复
             </Text>
             <View className="flex-row gap-3">
@@ -216,7 +220,8 @@ function BillFormSheetContent({
                 onPress={() => setConfirmDelete(true)}
                 accessibilityRole="button"
                 accessibilityLabel="删除账单"
-                className="h-[48px] px-4 rounded-md bg-surface-muted dark:bg-surface-muted-dark items-center justify-center">
+                style={{ backgroundColor: palette.surfaceMuted }}
+                className="h-[48px] px-4 rounded-md items-center justify-center">
                 <Ionicons name="trash-outline" size={20} color={palette.danger} />
               </Pressable>
             ) : null}

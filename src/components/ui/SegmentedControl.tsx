@@ -1,11 +1,9 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { LayoutChangeEvent, Pressable, StyleSheet, Text, View } from 'react-native';
+import { LayoutChangeEvent, Pressable, StyleSheet, Text } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
   useSharedValue,
-  withSequence,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 
@@ -27,65 +25,9 @@ export type SegmentedControlProps<T extends string> = {
 
 const TRACK_PADDING = 4;
 
-type SegmentButtonProps = {
-  label: string;
-  selected: boolean;
-  inkColor: string;
-  inkMutedColor: string;
-  onPress: () => void;
-};
-
-function SegmentButton({
-  label,
-  selected,
-  inkColor,
-  inkMutedColor,
-  onPress,
-}: SegmentButtonProps) {
-  const scale = useSharedValue(1);
-
-  const animatedTextStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
-  return (
-    <Pressable
-      onPressIn={() => {
-        scale.value = withTiming(0.95, {
-          duration: 70,
-          easing: Easing.out(Easing.quad),
-        });
-      }}
-      onPressOut={() => {
-        scale.value = withSpring(1, {
-          damping: 16,
-          stiffness: 360,
-        });
-      }}
-      onPress={onPress}
-      accessibilityRole="tab"
-      accessibilityState={{ selected }}
-      accessibilityLabel={label}
-      style={styles.segment}>
-      <Animated.View style={animatedTextStyle}>
-        <Text
-          style={[
-            styles.label,
-            {
-              color: selected ? inkColor : inkMutedColor,
-              fontWeight: selected ? '600' : '400',
-            },
-          ]}>
-          {label}
-        </Text>
-      </Animated.View>
-    </Pressable>
-  );
-}
-
 /**
  * Section 6.5 & 6.8: Segmented Control
- * 基于 React Native Reanimated 实现跨平台硬件加速滑动胶囊动效 + 触觉反馈
+ * 基于 React Native Reanimated 实现丝滑胶囊平移与色彩渐变过渡 + 纯触觉反馈（无组件抖动缩放）
  */
 export function SegmentedControl<T extends string>({
   options,
@@ -110,7 +52,6 @@ export function SegmentedControl<T extends string>({
   }, [trackWidth, options.length]);
 
   const translateX = useSharedValue(0);
-  const pillScale = useSharedValue(1);
 
   useEffect(() => {
     if (segmentWidth <= 0) return;
@@ -120,21 +61,33 @@ export function SegmentedControl<T extends string>({
       translateX.value = targetX;
       isFirstLayout.current = false;
     } else {
-      translateX.value = withSpring(targetX, {
-        damping: 24,
-        stiffness: 360,
-        mass: 0.65,
+      translateX.value = withTiming(targetX, {
+        duration: 220,
+        easing: Easing.out(Easing.cubic),
       });
-      pillScale.value = withSequence(
-        withTiming(0.96, { duration: 55, easing: Easing.out(Easing.quad) }),
-        withSpring(1, { damping: 18, stiffness: 360 }),
-      );
     }
-  }, [activeIndex, segmentWidth, translateX, pillScale]);
+  }, [activeIndex, segmentWidth, translateX]);
 
-  const animatedPillStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: translateX.value }, { scale: pillScale.value }],
-  }));
+  const animatedTrackStyle = useAnimatedStyle(
+    () => ({
+      backgroundColor: withTiming(palette.surfaceMuted, {
+        duration: 240,
+        easing: Easing.out(Easing.quad),
+      }),
+    }),
+    [palette.surfaceMuted],
+  );
+
+  const animatedPillStyle = useAnimatedStyle(
+    () => ({
+      transform: [{ translateX: translateX.value }],
+      backgroundColor: withTiming(palette.surfaceSelected, {
+        duration: 240,
+        easing: Easing.out(Easing.quad),
+      }),
+    }),
+    [palette.surfaceSelected],
+  );
 
   const handleTrackLayout = (e: LayoutChangeEvent) => {
     const w = e.nativeEvent.layout.width;
@@ -144,20 +97,17 @@ export function SegmentedControl<T extends string>({
   };
 
   return (
-    <View
+    <Animated.View
       accessibilityRole="tablist"
       onLayout={handleTrackLayout}
-      style={[styles.track, { backgroundColor: palette.surfaceMuted }]}
+      style={[styles.track, animatedTrackStyle]}
       className={className}>
       {segmentWidth > 0 ? (
         <Animated.View
           pointerEvents="none"
           style={[
             styles.pill,
-            {
-              width: segmentWidth,
-              backgroundColor: palette.surfaceSelected,
-            },
+            { width: segmentWidth },
             animatedPillStyle,
           ]}
         />
@@ -166,22 +116,38 @@ export function SegmentedControl<T extends string>({
       {options.map((opt, idx) => {
         const selected = idx === activeIndex;
         return (
-          <SegmentButton
+          <Pressable
             key={opt.value}
-            label={opt.label}
-            selected={selected}
-            inkColor={palette.ink}
-            inkMutedColor={palette.inkMuted}
             onPress={() => {
               if (opt.value !== value) {
                 haptic('selection');
+                if (segmentWidth > 0) {
+                  translateX.value = withTiming(idx * segmentWidth, {
+                    duration: 220,
+                    easing: Easing.out(Easing.cubic),
+                  });
+                }
               }
               onChange(opt.value);
             }}
-          />
+            accessibilityRole="tab"
+            accessibilityState={{ selected }}
+            accessibilityLabel={opt.label}
+            style={styles.segment}>
+            <Text
+              style={[
+                styles.label,
+                {
+                  color: selected ? palette.ink : palette.inkMuted,
+                  fontWeight: selected ? '600' : '400',
+                },
+              ]}>
+              {opt.label}
+            </Text>
+          </Pressable>
         );
       })}
-    </View>
+    </Animated.View>
   );
 }
 

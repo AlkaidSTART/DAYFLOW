@@ -4,6 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Sheet } from '@/components/ui/Sheet';
+import { useResolvedTheme } from '@/hooks/use-resolved-theme';
 import { formatCentsNumber, parseAmountToCents } from '@/lib/money';
 import { tabularNumsStyle } from '@/theme/tokens';
 
@@ -22,6 +23,7 @@ function BudgetFormSheetContent({
   onClose,
   onSaveBudget,
 }: BudgetFormSheetProps) {
+  const { palette } = useResolvedTheme();
   const [input, setInput] = useState(
     currentBudgetCents > 0
       ? formatCentsNumber(currentBudgetCents).replace(/,/g, '')
@@ -55,7 +57,9 @@ function BudgetFormSheetContent({
         />
 
         <View>
-          <Text className="text-caption text-ink-muted dark:text-ink-muted-dark mb-2">
+          <Text
+            style={{ color: palette.inkMuted }}
+            className="text-caption mb-2">
             常用生活费档位
           </Text>
           <View className="flex-row flex-wrap gap-2">
@@ -68,10 +72,11 @@ function BudgetFormSheetContent({
                 }}
                 accessibilityRole="button"
                 accessibilityLabel={`设置预算 ${yuan} 元`}
-                className="px-3.5 py-2 rounded-md bg-surface-muted dark:bg-surface-muted-dark">
+                style={{ backgroundColor: palette.surfaceMuted }}
+                className="px-3.5 py-2 rounded-md">
                 <Text
-                  style={tabularNumsStyle}
-                  className="text-caption font-semibold text-ink dark:text-ink-dark">
+                  style={[tabularNumsStyle, { color: palette.ink }]}
+                  className="text-caption font-semibold">
                   ¥ {yuan}.00
                 </Text>
               </Pressable>

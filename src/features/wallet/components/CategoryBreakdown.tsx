@@ -48,7 +48,9 @@ export function CategoryBreakdown({
   return (
     <View>
       <View className="flex-row items-center justify-between mb-4">
-        <Text className="text-h2 text-ink dark:text-ink-dark">支出分类</Text>
+        <Text style={{ color: palette.ink }} className="text-h2">
+          支出分类
+        </Text>
         {selectedCategoryId && onSelectCategory ? (
           <Pressable
             onPress={() => {
@@ -70,7 +72,9 @@ export function CategoryBreakdown({
 
       <View style={getCardSurfaceStyle(theme, palette)} className="rounded-lg p-4">
         {/* 堆叠占比条 */}
-        <View className="h-[10px] rounded-full bg-surface-muted dark:bg-surface-muted-dark overflow-hidden flex-row mb-3">
+        <View
+          style={{ backgroundColor: palette.surfaceMuted }}
+          className="h-[10px] rounded-full overflow-hidden flex-row mb-3">
           {items.map((item, idx) => {
             const color = chartPalette[item.chartColorIndex % chartPalette.length];
             const isDimmed =
@@ -93,8 +97,8 @@ export function CategoryBreakdown({
 
         {/* 摘要行 */}
         <Text
-          style={tabularNumsStyle}
-          className="text-micro text-ink-muted dark:text-ink-muted-dark mb-3">
+          style={[tabularNumsStyle, { color: palette.inkMuted }]}
+          className="text-micro mb-3">
           {legendSummary}
         </Text>
 
@@ -121,23 +125,20 @@ export function CategoryBreakdown({
                     className="w-2.5 h-2.5 rounded-full mr-2.5"
                   />
                   <Text
-                    className={`text-body ${
-                      isSelected
-                        ? 'text-ink dark:text-ink-dark font-semibold'
-                        : 'text-ink dark:text-ink-dark'
-                    }`}>
+                    style={{ color: palette.ink }}
+                    className={`text-body ${isSelected ? 'font-semibold' : ''}`}>
                     {item.categoryName}
                   </Text>
                   <Text
-                    style={tabularNumsStyle}
-                    className="text-caption text-ink-subtle dark:text-ink-subtle-dark ml-2">
+                    style={[tabularNumsStyle, { color: palette.inkSubtle }]}
+                    className="text-caption ml-2">
                     {item.percent}%
                   </Text>
                 </View>
 
                 <Text
-                  style={tabularNumsStyle}
-                  className="text-body-strong text-ink dark:text-ink-dark">
+                  style={[tabularNumsStyle, { color: palette.ink }]}
+                  className="text-body-strong">
                   {formatCurrency(item.totalCents)}
                 </Text>
               </Pressable>

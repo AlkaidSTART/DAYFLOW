@@ -95,19 +95,20 @@ export function TimerDisplay({
         ]}>
         <View
           accessible={false}
-          className="w-14 h-14 rounded-full bg-surface-muted dark:bg-surface-muted-dark items-center justify-center mb-4">
+          style={{ backgroundColor: palette.surfaceMuted }}
+          className="w-14 h-14 rounded-full items-center justify-center mb-4">
           <Ionicons
             name="checkmark-outline"
             size={28}
             color={isBreak ? palette.success : palette.accent}
           />
         </View>
-        <Text className="text-h1 text-ink dark:text-ink-dark mb-2">
+        <Text style={{ color: palette.ink }} className="text-h1 mb-2">
           {isBreak ? '休息结束' : '专注完成'}
         </Text>
         <Text
-          style={tabularNumsStyle}
-          className="text-body text-ink-muted dark:text-ink-muted-dark mb-6">
+          style={[tabularNumsStyle, { color: palette.inkMuted }]}
+          className="text-body mb-6">
           本次{modeLabel} {completedMinutes} 分钟
         </Text>
         <Button
@@ -134,7 +135,7 @@ export function TimerDisplay({
             backgroundColor: isBreak ? palette.success : palette.accent,
           }}
         />
-        <Text className="text-caption text-ink-muted dark:text-ink-muted-dark">
+        <Text style={{ color: palette.inkMuted }} className="text-caption">
           {phase === 'paused' ? `${modeLabel}已暂停` : modeLabel}
         </Text>
       </View>
@@ -160,13 +161,14 @@ export function TimerDisplay({
         }`}>
         <Animated.View style={digitAnimatedStyle}>
           <Text
-            style={tabularNumsStyle}
+            style={[
+              tabularNumsStyle,
+              {
+                color: phase === 'paused' ? palette.inkMuted : palette.ink,
+              },
+            ]}
             accessibilityLiveRegion="polite"
-            className={`text-display-lg tracking-tight ${
-              phase === 'paused'
-                ? 'text-ink-muted dark:text-ink-muted-dark'
-                : 'text-ink dark:text-ink-dark'
-            }`}>
+            className="text-display-lg tracking-tight">
             {formatTimerMMSS(remainingSeconds)}
           </Text>
         </Animated.View>
@@ -174,7 +176,9 @@ export function TimerDisplay({
 
       {/* 计时器下方 4px 线性进度条（专注/休息进行中显示，未开始时保持留白避免空线残影） */}
       {phase !== 'idle' ? (
-        <View className="w-[220px] h-[4px] rounded-full bg-surface-muted dark:bg-surface-muted-dark mt-6 overflow-hidden">
+        <View
+          style={{ backgroundColor: palette.surfaceMuted }}
+          className="w-[220px] h-[4px] rounded-full mt-6 overflow-hidden">
           <Animated.View
             style={[
               {

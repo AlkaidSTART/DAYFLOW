@@ -5,7 +5,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { cssInterop } from 'nativewind';
 import React, { useEffect, useMemo } from 'react';
-import { Appearance, KeyboardAvoidingView, View } from 'react-native';
+import { Appearance, KeyboardAvoidingView, Platform, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { Snackbar } from '@/components/ui/Snackbar';
@@ -14,7 +14,6 @@ import { UpdatePromptSheet } from '@/features/settings/components/UpdatePromptSh
 import { useSettingsStore } from '@/features/settings/store/settings-store';
 import { useVersionStore } from '@/features/settings/store/version-store';
 import { useResolvedTheme } from '@/hooks/use-resolved-theme';
-import { syncThemeCssVariables } from '@/theme/tokens';
 
 // 注册第三方/复合容器组件以支持 NativeWind className
 cssInterop(SafeAreaView, { className: 'style' });
@@ -27,10 +26,11 @@ export default function RootLayout() {
   const checkForUpdates = useVersionStore((s) => s.checkForUpdates);
   const { isDark, palette } = useResolvedTheme();
 
-  // 初始化及主题变化时同步 CSS 变量，并监听系统外观变化
   useEffect(() => {
-    syncThemeCssVariables(palette, isDark);
-  }, [palette, isDark]);
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      document.documentElement.classList.toggle('dark', isDark);
+    }
+  }, [isDark]);
 
   useEffect(() => {
     const sys = Appearance.getColorScheme() === 'dark' ? 'dark' : 'light';

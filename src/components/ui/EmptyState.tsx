@@ -24,11 +24,17 @@ export function EmptyState({ icon, description, actionLabel, onAction }: EmptySt
       {/* 纯线性几何图形组合 */}
       <View
         accessible={false}
-        className="w-16 h-16 rounded-full border border-dashed border-line dark:border-line-dark bg-surface-muted dark:bg-surface-muted-dark items-center justify-center mb-4">
+        style={{
+          borderColor: palette.line,
+          backgroundColor: palette.surfaceMuted,
+        }}
+        className="w-16 h-16 rounded-full border border-dashed items-center justify-center mb-4">
         <Ionicons name={icon} size={26} color={palette.inkMuted} />
       </View>
 
-      <Text className="text-body text-ink-muted dark:text-ink-muted-dark text-center mb-6 max-w-[260px]">
+      <Text
+        style={{ color: palette.inkMuted }}
+        className="text-body text-center mb-6 max-w-[260px]">
         {description}
       </Text>
 

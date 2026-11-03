@@ -3,6 +3,7 @@ import { Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { Sheet } from '@/components/ui/Sheet';
+import { useResolvedTheme } from '@/hooks/use-resolved-theme';
 
 export type FinishConfirmSheetProps = {
   visible: boolean;
@@ -20,12 +21,14 @@ export function FinishConfirmSheet({
   onConfirmRecord,
   onConfirmDiscard,
 }: FinishConfirmSheetProps) {
+  const { palette } = useResolvedTheme();
+
   if (!visible) return null;
 
   return (
     <Sheet visible={visible} onClose={onClose} title="结束本次专注并记录？">
       <View className="gap-4">
-        <Text className="text-body text-ink-muted dark:text-ink-muted-dark">
+        <Text style={{ color: palette.inkMuted }} className="text-body">
           你可以将已经进行的时长记录到今日专注统计中，或者直接放弃本次计时。
         </Text>
 

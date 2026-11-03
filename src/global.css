@@ -7,21 +7,6 @@
     -apple-system, BlinkMacSystemFont, 'SF Pro Text', Roboto, ui-sans-serif, system-ui, sans-serif;
   --font-mono:
     ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
-
-  --color-canvas: #F7F7F8;
-  --color-surface: #FFFFFF;
-  --color-surface-muted: #ECECF1;
-  --color-surface-selected: #E3E5E8;
-  --color-line: #E5E7EB;
-  --color-ink: #0D0D0D;
-  --color-ink-muted: #5D5D68;
-  --color-ink-subtle: #8E8EA0;
-  --color-accent: #10A37F;
-  --color-accent-soft: #E6F7F2;
-  --color-on-accent: #FFFFFF;
-  --color-success: #10A37F;
-  --color-warning: #D97706;
-  --color-danger: #DC2626;
 }
 
 input,

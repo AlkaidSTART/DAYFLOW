@@ -49,7 +49,9 @@ export function ProgressCard({
   return (
     <View>
       <View className="flex-row items-center justify-between mb-4">
-        <Text className="text-h2 text-ink dark:text-ink-dark">今日进度</Text>
+        <Text style={{ color: palette.ink }} className="text-h2">
+          今日进度
+        </Text>
         <Pressable
           onPress={() => {
             haptic('selection');
@@ -70,7 +72,9 @@ export function ProgressCard({
       <View style={getCardSurfaceStyle(theme, palette)} className="rounded-lg p-4">
         {progress.totalCount === 0 ? (
           <View className="py-2">
-            <Text className="text-body text-ink-muted dark:text-ink-muted-dark mb-4">
+            <Text
+              style={{ color: palette.inkMuted }}
+              className="text-body mb-4">
               今天还没有任务，从最重要的一件事开始。
             </Text>
             <View className="flex-row">
@@ -95,8 +99,8 @@ export function ProgressCard({
             accessibilityLabel={`今日已完成 ${progress.completedCount} / ${progress.totalCount}，点击查看每日复盘`}>
             <View className="flex-row items-baseline justify-between mb-2.5">
               <Text
-                style={tabularNumsStyle}
-                className="text-body-strong text-ink dark:text-ink-dark">
+                style={[tabularNumsStyle, { color: palette.ink }]}
+                className="text-body-strong">
                 已完成 {progress.completedCount} / {progress.totalCount}
               </Text>
               <Text
@@ -107,7 +111,9 @@ export function ProgressCard({
             </View>
 
             {/* 高度 6，圆角 full，轨道 surface-muted，填充 accent */}
-            <View className="h-[6px] rounded-full bg-surface-muted dark:bg-surface-muted-dark overflow-hidden">
+            <View
+              style={{ backgroundColor: palette.surfaceMuted }}
+              className="h-[6px] rounded-full overflow-hidden">
               <Animated.View
                 style={[
                   {
@@ -130,12 +136,13 @@ export function ProgressCard({
           }}
           accessibilityRole="button"
           accessibilityLabel="查看专注中心"
-          className="mt-4 pt-3 border-t border-line dark:border-line-dark flex-row items-center justify-between">
+          style={{ borderTopColor: palette.line }}
+          className="mt-4 pt-3 border-t flex-row items-center justify-between">
           <View className="flex-row items-center">
             <Ionicons name="timer-outline" size={18} color={palette.inkMuted} />
             <Text
-              style={tabularNumsStyle}
-              className="text-caption text-ink-muted dark:text-ink-muted-dark ml-1.5">
+              style={[tabularNumsStyle, { color: palette.inkMuted }]}
+              className="text-caption ml-1.5">
               专注 {focusSessionsCount} 次 · 共 {focusMinutesTotal} 分钟
             </Text>
           </View>

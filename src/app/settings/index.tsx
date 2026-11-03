@@ -6,8 +6,6 @@ import Animated, {
   Easing,
   useAnimatedStyle,
   useSharedValue,
-  withSequence,
-  withSpring,
   withTiming,
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -48,7 +46,7 @@ const THRESHOLD_OPTIONS = [70, 80, 90];
 /**
  * Section 7.4: 设置页
  * 分组列表，组间 32 间距 (gap-8)：
- * 1. 外观：浅色 / 深色 / 跟随系统（三选一）
+ * 1. 外观：浅色 / 深色 / 跟随系统（三选一）+ 纯色配色方案
  * 2. 专注：专注时长、短休息、长休息、屏幕常亮
  * 3. 反馈：触觉反馈、通知
  * 4. 财务：预算提醒阈值、每月起始日（P1 预留）
@@ -95,36 +93,6 @@ export default function SettingsScreen() {
   const [restoreConfirmVisible, setRestoreConfirmVisible] = useState(false);
   const [licenseSheetVisible, setLicenseSheetVisible] = useState(false);
 
-  const appearanceCardScale = useSharedValue(1);
-  const themeIconRotate = useSharedValue(0);
-  const themeIconScale = useSharedValue(1);
-
-  const appearanceCardAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: appearanceCardScale.value }],
-  }));
-
-  const themeIconAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { rotate: `${themeIconRotate.value}deg` },
-      { scale: themeIconScale.value },
-    ],
-  }));
-
-  const triggerAppearancePulse = (animateIcon = false) => {
-    appearanceCardScale.value = withSequence(
-      withTiming(0.99, { duration: 65, easing: Easing.out(Easing.quad) }),
-      withSpring(1, { damping: 18, stiffness: 360 }),
-    );
-    if (animateIcon) {
-      themeIconRotate.value = -25;
-      themeIconRotate.value = withSpring(0, { damping: 14, stiffness: 320 });
-      themeIconScale.value = withSequence(
-        withTiming(0.82, { duration: 60, easing: Easing.out(Easing.quad) }),
-        withSpring(1, { damping: 14, stiffness: 360 }),
-      );
-    }
-  };
-
   const handleCheckUpdatePress = async () => {
     triggerHaptic('selection', hapticEnabled);
     if (isOutdated && remoteInfo) {
@@ -167,13 +135,16 @@ export default function SettingsScreen() {
     showSnackbar('已清空本地全部数据');
   };
 
+  const cardSurface = getCardSurfaceStyle(theme, palette);
+
   return (
     <SafeAreaView
       edges={['top', 'bottom']}
-      style={{ backgroundColor: palette.canvas }}
-      className="flex-1 bg-canvas dark:bg-canvas-dark">
+      style={{ flex: 1, backgroundColor: palette.canvas }}>
       {/* 顶部返回导航栏 */}
-      <View className="px-6 pt-3 pb-4 flex-row items-center border-b border-line dark:border-line-dark">
+      <View
+        style={{ borderBottomWidth: 1, borderBottomColor: palette.line }}
+        className="px-6 pt-3 pb-4 flex-row items-center">
         <Pressable
           onPress={() => router.back()}
           hitSlop={10}
@@ -182,7 +153,9 @@ export default function SettingsScreen() {
           className="w-11 h-11 -ml-2 mr-1 items-center justify-center rounded-full">
           <Ionicons name="arrow-back-outline" size={24} color={palette.ink} />
         </Pressable>
-        <Text className="text-h1 text-ink dark:text-ink-dark">设置</Text>
+        <Text style={{ color: palette.ink }} className="text-h1">
+          设置
+        </Text>
       </View>
 
       <ScrollView
@@ -192,43 +165,23 @@ export default function SettingsScreen() {
         <View className="gap-8">
           {/* 1. 外观 */}
           <View>
-            <Text className="text-caption font-semibold text-ink-muted dark:text-ink-muted-dark mb-3">
+            <Text
+              style={{ color: palette.inkMuted }}
+              className="text-caption font-semibold mb-3">
               1. 外观
             </Text>
-            <Animated.View
-              style={[getCardSurfaceStyle(theme, palette), appearanceCardAnimatedStyle]}
-              className="rounded-lg p-4 gap-5">
+            <View style={cardSurface} className="rounded-lg p-4 gap-5">
               <View>
-                <View className="flex-row items-center justify-between mb-3">
-                  <Text className="text-body-strong text-ink dark:text-ink-dark">
-                    主题模式
-                  </Text>
-                  <Animated.View
-                    style={[
-                      { backgroundColor: palette.accentSoft },
-                      styles.themeBadge,
-                      themeIconAnimatedStyle,
-                    ]}>
-                    <Ionicons
-                      name={
-                        themePreference === 'dark'
-                          ? 'moon'
-                          : themePreference === 'light'
-                            ? 'sunny'
-                            : 'contrast'
-                      }
-                      size={15}
-                      color={palette.accent}
-                    />
-                  </Animated.View>
-                </View>
+                <Text
+                  style={{ color: palette.ink }}
+                  className="text-body-strong mb-3">
+                  主题模式
+                </Text>
                 <SegmentedControl
                   options={THEME_OPTIONS}
                   value={themePreference}
                   onChange={(val) => {
                     if (val === themePreference) return;
-                    triggerHaptic('selection', hapticEnabled);
-                    triggerAppearancePulse(true);
                     executeThemeTransition(() => {
                       setThemePreference(val);
                     });
@@ -236,8 +189,12 @@ export default function SettingsScreen() {
                 />
               </View>
 
-              <View className="pt-3 border-t border-line dark:border-line-dark">
-                <Text className="text-body-strong text-ink dark:text-ink-dark mb-3">
+              <View
+                style={{ borderTopWidth: 1, borderTopColor: palette.line }}
+                className="pt-3">
+                <Text
+                  style={{ color: palette.ink }}
+                  className="text-body-strong mb-3">
                   配色方案
                 </Text>
 
@@ -253,7 +210,6 @@ export default function SettingsScreen() {
                         onSelect={() => {
                           if (!isSelected) {
                             triggerHaptic('selection', hapticEnabled);
-                            triggerAppearancePulse(false);
                             executeThemeTransition(() => {
                               setColorSchemeId(scheme.id);
                             });
@@ -264,19 +220,23 @@ export default function SettingsScreen() {
                   })}
                 </View>
               </View>
-            </Animated.View>
+            </View>
           </View>
 
           {/* 2. 专注 */}
           <View>
-            <Text className="text-caption font-semibold text-ink-muted dark:text-ink-muted-dark mb-3">
+            <Text
+              style={{ color: palette.inkMuted }}
+              className="text-caption font-semibold mb-3">
               2. 专注
             </Text>
-            <View style={getCardSurfaceStyle(theme, palette)} className="rounded-lg p-4 gap-5">
+            <View style={cardSurface} className="rounded-lg p-4 gap-5">
               {/* 专注时长 */}
               <View>
                 <View className="flex-row items-center justify-between mb-2">
-                  <Text className="text-body text-ink dark:text-ink-dark">专注时长</Text>
+                  <Text style={{ color: palette.ink }} className="text-body">
+                    专注时长
+                  </Text>
                   <Text
                     style={[tabularNumsStyle, { color: palette.accent }]}
                     className="text-caption font-semibold">
@@ -292,13 +252,11 @@ export default function SettingsScreen() {
                         onPress={() => setFocusDuration('focusMinutes', m)}
                         accessibilityRole="radio"
                         accessibilityState={{ checked: active }}
-                        style={[
-                          {
-                            backgroundColor: active
-                              ? palette.accentSoft
-                              : palette.surfaceMuted,
-                          },
-                        ]}
+                        style={{
+                          backgroundColor: active
+                            ? palette.accentSoft
+                            : palette.surfaceMuted,
+                        }}
                         className="flex-1 min-h-[40px] rounded-md items-center justify-center">
                         <Text
                           style={[
@@ -320,7 +278,9 @@ export default function SettingsScreen() {
               {/* 短休息 */}
               <View>
                 <View className="flex-row items-center justify-between mb-2">
-                  <Text className="text-body text-ink dark:text-ink-dark">短休息</Text>
+                  <Text style={{ color: palette.ink }} className="text-body">
+                    短休息
+                  </Text>
                   <Text
                     style={[tabularNumsStyle, { color: palette.accent }]}
                     className="text-caption font-semibold">
@@ -336,13 +296,11 @@ export default function SettingsScreen() {
                         onPress={() => setFocusDuration('shortBreakMinutes', m)}
                         accessibilityRole="radio"
                         accessibilityState={{ checked: active }}
-                        style={[
-                          {
-                            backgroundColor: active
-                              ? palette.accentSoft
-                              : palette.surfaceMuted,
-                          },
-                        ]}
+                        style={{
+                          backgroundColor: active
+                            ? palette.accentSoft
+                            : palette.surfaceMuted,
+                        }}
                         className="flex-1 min-h-[40px] rounded-md items-center justify-center">
                         <Text
                           style={[
@@ -364,7 +322,9 @@ export default function SettingsScreen() {
               {/* 长休息 */}
               <View>
                 <View className="flex-row items-center justify-between mb-2">
-                  <Text className="text-body text-ink dark:text-ink-dark">长休息</Text>
+                  <Text style={{ color: palette.ink }} className="text-body">
+                    长休息
+                  </Text>
                   <Text
                     style={[tabularNumsStyle, { color: palette.accent }]}
                     className="text-caption font-semibold">
@@ -380,13 +340,11 @@ export default function SettingsScreen() {
                         onPress={() => setFocusDuration('longBreakMinutes', m)}
                         accessibilityRole="radio"
                         accessibilityState={{ checked: active }}
-                        style={[
-                          {
-                            backgroundColor: active
-                              ? palette.accentSoft
-                              : palette.surfaceMuted,
-                          },
-                        ]}
+                        style={{
+                          backgroundColor: active
+                            ? palette.accentSoft
+                            : palette.surfaceMuted,
+                        }}
                         className="flex-1 min-h-[40px] rounded-md items-center justify-center">
                         <Text
                           style={[
@@ -406,12 +364,14 @@ export default function SettingsScreen() {
               </View>
 
               {/* 计时中屏幕常亮 */}
-              <View className="pt-2 border-t border-line dark:border-line-dark flex-row items-center justify-between min-h-[48px]">
+              <View
+                style={{ borderTopWidth: 1, borderTopColor: palette.line }}
+                className="pt-2 flex-row items-center justify-between min-h-[48px]">
                 <View className="flex-1 mr-4">
-                  <Text className="text-body text-ink dark:text-ink-dark">
+                  <Text style={{ color: palette.ink }} className="text-body">
                     计时中屏幕常亮
                   </Text>
-                  <Text className="text-caption text-ink-muted dark:text-ink-muted-dark">
+                  <Text style={{ color: palette.inkMuted }} className="text-caption">
                     专注进行时保持屏幕不自动熄灭
                   </Text>
                 </View>
@@ -428,27 +388,35 @@ export default function SettingsScreen() {
 
           {/* 3. 反馈与震动 */}
           <View>
-            <Text className="text-caption font-semibold text-ink-muted dark:text-ink-muted-dark mb-3">
+            <Text
+              style={{ color: palette.inkMuted }}
+              className="text-caption font-semibold mb-3">
               3. 反馈与震动
             </Text>
-            <View style={getCardSurfaceStyle(theme, palette)} className="rounded-lg p-4 gap-4">
+            <View style={cardSurface} className="rounded-lg p-4 gap-4">
               <View className="flex-row items-center justify-between min-h-[48px]">
                 <View className="flex-1 mr-4">
                   <View className="flex-row items-center gap-1.5 mb-0.5">
-                    <Text className="text-body text-ink dark:text-ink-dark">触觉震动反馈</Text>
+                    <Text style={{ color: palette.ink }} className="text-body">
+                      触觉震动反馈
+                    </Text>
                     <View
                       style={{
-                        backgroundColor: hapticEnabled ? `${palette.accent}18` : palette.surfaceMuted,
+                        backgroundColor: hapticEnabled
+                          ? `${palette.accent}18`
+                          : palette.surfaceMuted,
                       }}
                       className="px-1.5 py-0.5 rounded-sm">
                       <Text
-                        style={{ color: hapticEnabled ? palette.accent : palette.inkSubtle }}
+                        style={{
+                          color: hapticEnabled ? palette.accent : palette.inkSubtle,
+                        }}
                         className="text-micro font-semibold">
                         {hapticEnabled ? '已开启' : '已禁止'}
                       </Text>
                     </View>
                   </View>
-                  <Text className="text-caption text-ink-muted dark:text-ink-muted-dark">
+                  <Text style={{ color: palette.inkMuted }} className="text-caption">
                     {hapticEnabled
                       ? '底部 Tab 切换、滚轮滑动、完成任务与专注计时均提供触觉震动'
                       : '已全局禁止所有触觉震动反馈'}
@@ -487,7 +455,9 @@ export default function SettingsScreen() {
                   accessibilityRole="button"
                   accessibilityLabel={hapticEnabled ? '禁止震动' : '开启震动'}
                   style={{
-                    backgroundColor: hapticEnabled ? palette.surfaceMuted : palette.accentSoft,
+                    backgroundColor: hapticEnabled
+                      ? palette.surfaceMuted
+                      : palette.accentSoft,
                   }}
                   className="px-3 py-1.5 rounded-md flex-row items-center">
                   <Ionicons
@@ -504,10 +474,14 @@ export default function SettingsScreen() {
                 </Pressable>
               </View>
 
-              <View className="pt-3 border-t border-line dark:border-line-dark flex-row items-center justify-between min-h-[48px]">
+              <View
+                style={{ borderTopWidth: 1, borderTopColor: palette.line }}
+                className="pt-3 flex-row items-center justify-between min-h-[48px]">
                 <View className="flex-1 mr-4">
-                  <Text className="text-body text-ink dark:text-ink-dark">本地通知</Text>
-                  <Text className="text-caption text-ink-muted dark:text-ink-muted-dark">
+                  <Text style={{ color: palette.ink }} className="text-body">
+                    本地通知
+                  </Text>
+                  <Text style={{ color: palette.inkMuted }} className="text-caption">
                     专注与休息到点时发送提醒
                   </Text>
                 </View>
@@ -524,13 +498,15 @@ export default function SettingsScreen() {
 
           {/* 4. 财务 */}
           <View>
-            <Text className="text-caption font-semibold text-ink-muted dark:text-ink-muted-dark mb-3">
+            <Text
+              style={{ color: palette.inkMuted }}
+              className="text-caption font-semibold mb-3">
               4. 财务
             </Text>
-            <View style={getCardSurfaceStyle(theme, palette)} className="rounded-lg p-4 gap-4">
+            <View style={cardSurface} className="rounded-lg p-4 gap-4">
               <View>
                 <View className="flex-row items-center justify-between mb-2">
-                  <Text className="text-body text-ink dark:text-ink-dark">
+                  <Text style={{ color: palette.ink }} className="text-body">
                     预算提醒阈值
                   </Text>
                   <Text
@@ -548,13 +524,11 @@ export default function SettingsScreen() {
                         onPress={() => setBudgetThresholdPercent(pct)}
                         accessibilityRole="radio"
                         accessibilityState={{ checked: active }}
-                        style={[
-                          {
-                            backgroundColor: active
-                              ? palette.accentSoft
-                              : palette.surfaceMuted,
-                          },
-                        ]}
+                        style={{
+                          backgroundColor: active
+                            ? palette.accentSoft
+                            : palette.surfaceMuted,
+                        }}
                         className="flex-1 min-h-[40px] rounded-md items-center justify-center">
                         <Text
                           style={[
@@ -573,11 +547,15 @@ export default function SettingsScreen() {
                 </View>
               </View>
 
-              <View className="pt-3 border-t border-line dark:border-line-dark flex-row items-center justify-between min-h-[44px]">
-                <Text className="text-body text-ink dark:text-ink-dark">每月起始日</Text>
+              <View
+                style={{ borderTopWidth: 1, borderTopColor: palette.line }}
+                className="pt-3 flex-row items-center justify-between min-h-[44px]">
+                <Text style={{ color: palette.ink }} className="text-body">
+                  每月起始日
+                </Text>
                 <Text
-                  style={tabularNumsStyle}
-                  className="text-caption text-ink-subtle dark:text-ink-subtle-dark">
+                  style={[tabularNumsStyle, { color: palette.inkSubtle }]}
+                  className="text-caption">
                   每月 {monthStartDay} 日（自然月）
                 </Text>
               </View>
@@ -586,10 +564,12 @@ export default function SettingsScreen() {
 
           {/* 5. 数据 */}
           <View>
-            <Text className="text-caption font-semibold text-ink-muted dark:text-ink-muted-dark mb-3">
+            <Text
+              style={{ color: palette.inkMuted }}
+              className="text-caption font-semibold mb-3">
               5. 数据
             </Text>
-            <View style={getCardSurfaceStyle(theme, palette)} className="rounded-lg p-4 gap-3">
+            <View style={cardSurface} className="rounded-lg p-4 gap-3">
               <Pressable
                 onPress={handleExportBackup}
                 accessibilityRole="button"
@@ -597,14 +577,16 @@ export default function SettingsScreen() {
                 className="min-h-[48px] flex-row items-center justify-between">
                 <View className="flex-row items-center">
                   <Ionicons name="download-outline" size={20} color={palette.ink} />
-                  <Text className="text-body-strong text-ink dark:text-ink-dark ml-3">
+                  <Text
+                    style={{ color: palette.ink }}
+                    className="text-body-strong ml-3">
                     导出备份（JSON）
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward-outline" size={18} color={palette.inkMuted} />
               </Pressable>
 
-              <View className="h-[1px] bg-line dark:bg-line-dark" />
+              <View style={{ height: 1, backgroundColor: palette.line }} />
 
               <Pressable
                 onPress={() => setRestoreConfirmVisible(true)}
@@ -614,18 +596,22 @@ export default function SettingsScreen() {
                 <View className="flex-1 mr-3">
                   <View className="flex-row items-center">
                     <Ionicons name="cloud-upload-outline" size={20} color={palette.danger} />
-                    <Text className="text-body-strong text-danger dark:text-danger-dark ml-3">
+                    <Text
+                      style={{ color: palette.danger }}
+                      className="text-body-strong ml-3">
                       导入备份
                     </Text>
                   </View>
-                  <Text className="text-micro text-danger dark:text-danger-dark mt-1 ml-8">
+                  <Text
+                    style={{ color: palette.danger }}
+                    className="text-micro mt-1 ml-8">
                     恢复备份将完整替换当前数据，卸载应用前请先导出备份
                   </Text>
                 </View>
                 <Ionicons name="chevron-forward-outline" size={18} color={palette.inkMuted} />
               </Pressable>
 
-              <View className="h-[1px] bg-line dark:bg-line-dark" />
+              <View style={{ height: 1, backgroundColor: palette.line }} />
 
               <View className="pt-1">
                 <Button
@@ -641,20 +627,24 @@ export default function SettingsScreen() {
 
           {/* 6. 关于 */}
           <View>
-            <Text className="text-caption font-semibold text-ink-muted dark:text-ink-muted-dark mb-3">
+            <Text
+              style={{ color: palette.inkMuted }}
+              className="text-caption font-semibold mb-3">
               6. 关于
             </Text>
-            <View style={getCardSurfaceStyle(theme, palette)} className="rounded-lg p-4 gap-3">
+            <View style={cardSurface} className="rounded-lg p-4 gap-3">
               <View className="min-h-[40px] flex-row items-center justify-between">
-                <Text className="text-body text-ink dark:text-ink-dark">当前版本</Text>
+                <Text style={{ color: palette.ink }} className="text-body">
+                  当前版本
+                </Text>
                 <Text
-                  style={tabularNumsStyle}
-                  className="text-caption text-ink-muted dark:text-ink-muted-dark">
+                  style={[tabularNumsStyle, { color: palette.inkMuted }]}
+                  className="text-caption">
                   {formatVersionTag(currentVersion)} ({packageId})
                 </Text>
               </View>
 
-              <View className="h-[1px] bg-line dark:bg-line-dark" />
+              <View style={{ height: 1, backgroundColor: palette.line }} />
 
               <Pressable
                 onPress={handleCheckUpdatePress}
@@ -663,8 +653,12 @@ export default function SettingsScreen() {
                 accessibilityLabel="对比仓库最新版本并检查更新"
                 className="min-h-[44px] flex-row items-center justify-between">
                 <View className="flex-1 mr-3">
-                  <Text className="text-body text-ink dark:text-ink-dark">版本更新</Text>
-                  <Text className="text-micro text-ink-subtle dark:text-ink-subtle-dark mt-0.5">
+                  <Text style={{ color: palette.ink }} className="text-body">
+                    版本更新
+                  </Text>
+                  <Text
+                    style={{ color: palette.inkSubtle }}
+                    className="text-micro mt-0.5">
                     {isOutdated && remoteInfo
                       ? `落后于仓库最新 ${formatVersionTag(remoteInfo.version)}，点击查看乐观更新`
                       : '与 GitHub 仓库最新版本自动比对'}
@@ -673,7 +667,9 @@ export default function SettingsScreen() {
 
                 <View className="flex-row items-center">
                   {versionStatus === 'checking' ? (
-                    <Text className="text-caption text-ink-muted dark:text-ink-muted-dark mr-1">
+                    <Text
+                      style={{ color: palette.inkMuted }}
+                      className="text-caption mr-1">
                       检查中...
                     </Text>
                   ) : isOutdated && remoteInfo ? (
@@ -692,12 +688,14 @@ export default function SettingsScreen() {
                     </View>
                   ) : versionStatus === 'up-to-date' ? (
                     <Text
-                      style={tabularNumsStyle}
-                      className="text-caption text-success dark:text-success-dark mr-1">
+                      style={[tabularNumsStyle, { color: palette.success }]}
+                      className="text-caption mr-1">
                       已是最新 ({formatVersionTag(remoteInfo?.version ?? currentVersion)})
                     </Text>
                   ) : (
-                    <Text className="text-caption text-ink-muted dark:text-ink-muted-dark mr-1">
+                    <Text
+                      style={{ color: palette.inkMuted }}
+                      className="text-caption mr-1">
                       检查更新
                     </Text>
                   )}
@@ -705,23 +703,27 @@ export default function SettingsScreen() {
                 </View>
               </Pressable>
 
-              <View className="h-[1px] bg-line dark:bg-line-dark" />
+              <View style={{ height: 1, backgroundColor: palette.line }} />
 
               <Pressable
                 onPress={() => setLicenseSheetVisible(true)}
                 accessibilityRole="button"
                 accessibilityLabel="查看开源许可"
                 className="min-h-[40px] flex-row items-center justify-between">
-                <Text className="text-body text-ink dark:text-ink-dark">开源许可</Text>
+                <Text style={{ color: palette.ink }} className="text-body">
+                  开源许可
+                </Text>
                 <View className="flex-row items-center">
-                  <Text className="text-caption text-ink-muted dark:text-ink-muted-dark mr-1">
+                  <Text
+                    style={{ color: palette.inkMuted }}
+                    className="text-caption mr-1">
                     MIT License
                   </Text>
                   <Ionicons name="chevron-forward-outline" size={16} color={palette.inkMuted} />
                 </View>
               </Pressable>
 
-              <View className="h-[1px] bg-line dark:bg-line-dark" />
+              <View style={{ height: 1, backgroundColor: palette.line }} />
 
               {/* 验收辅助：一键模拟远端有新版本时的乐观更新提示 */}
               <View className="pt-1 flex-row gap-2">
@@ -763,7 +765,7 @@ export default function SettingsScreen() {
         onClose={() => setRestoreConfirmVisible(false)}
         title="从备份恢复数据">
         <View className="gap-4">
-          <Text className="text-body text-ink dark:text-ink-dark">
+          <Text style={{ color: palette.ink }} className="text-body">
             将完整替换当前数据，且不可恢复。请确认已备份当前需要保留的记录。
           </Text>
           <View className="flex-row gap-3 mt-2">
@@ -791,10 +793,10 @@ export default function SettingsScreen() {
         onClose={() => setLicenseSheetVisible(false)}
         title="开源许可">
         <View className="gap-3">
-          <Text className="text-body-strong text-ink dark:text-ink-dark">
+          <Text style={{ color: palette.ink }} className="text-body-strong">
             DAYFLOW · 个人效率工作台
           </Text>
-          <Text className="text-caption text-ink-muted dark:text-ink-muted-dark">
+          <Text style={{ color: palette.inkMuted }} className="text-caption">
             基于 Expo、React Native、NativeWind、Reanimated 与 Zustand 构建。遵循 Local First 原则，所有数据默认保存在本地设备。
           </Text>
           <Button
@@ -820,91 +822,66 @@ const ColorSchemeSwatch = React.memo(function ColorSchemeSwatch({
   isSelected: boolean;
   onSelect: () => void;
 }) {
-  const pressScale = useSharedValue(1);
   const selectedProgress = useSharedValue(isSelected ? 1 : 0);
 
   useEffect(() => {
-    selectedProgress.value = withSpring(isSelected ? 1 : 0, {
-      damping: 16,
-      stiffness: 380,
-      mass: 0.6,
+    selectedProgress.value = withTiming(isSelected ? 1 : 0, {
+      duration: 200,
+      easing: Easing.out(Easing.cubic),
     });
   }, [isSelected, selectedProgress]);
 
-  const handlePressIn = () => {
-    pressScale.value = withTiming(0.86, {
-      duration: 65,
-      easing: Easing.out(Easing.quad),
-    });
-  };
-
-  const handlePressOut = () => {
-    pressScale.value = withSpring(1, {
-      damping: 14,
-      stiffness: 360,
-    });
-  };
-
-  const containerAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pressScale.value }],
-  }));
-
   const ringAnimatedStyle = useAnimatedStyle(() => ({
     opacity: selectedProgress.value,
-    transform: [{ scale: 0.84 + selectedProgress.value * 0.16 }],
   }));
 
   const checkAnimatedStyle = useAnimatedStyle(() => ({
     opacity: selectedProgress.value,
-    transform: [{ scale: 0.4 + selectedProgress.value * 0.6 }],
   }));
 
   return (
-    <Animated.View style={containerAnimatedStyle}>
-      <Pressable
-        onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
-        onPress={onSelect}
-        hitSlop={6}
-        accessibilityRole="radio"
-        accessibilityState={{ checked: isSelected }}
-        accessibilityLabel={scheme.id}
-        style={styles.swatchTouch}>
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            styles.swatchRing,
-            {
-              borderColor: scheme.accentColor,
-              backgroundColor: scheme.light.accentSoft,
-            },
-            ringAnimatedStyle,
-          ]}
-        />
-        <View
-          style={[
-            styles.swatchCircle,
-            {
-              backgroundColor: scheme.accentColor,
-            },
-          ]}>
-          <Animated.View style={checkAnimatedStyle}>
-            <Ionicons name="checkmark" size={16} color="#FFFFFF" />
-          </Animated.View>
-        </View>
-      </Pressable>
-    </Animated.View>
+    <Pressable
+      onPress={() => {
+        if (!isSelected) {
+          selectedProgress.value = withTiming(1, {
+            duration: 200,
+            easing: Easing.out(Easing.cubic),
+          });
+        }
+        onSelect();
+      }}
+      hitSlop={6}
+      accessibilityRole="radio"
+      accessibilityState={{ checked: isSelected }}
+      accessibilityLabel={scheme.id}
+      style={styles.swatchTouch}>
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.swatchRing,
+          {
+            borderColor: scheme.accentColor,
+            backgroundColor: scheme.light.accentSoft,
+          },
+          ringAnimatedStyle,
+        ]}
+      />
+      <View
+        style={[
+          styles.swatchCircle,
+          {
+            backgroundColor: scheme.accentColor,
+          },
+        ]}>
+        <Animated.View style={checkAnimatedStyle}>
+          <Ionicons name="checkmark" size={16} color="#FFFFFF" />
+        </Animated.View>
+      </View>
+    </Pressable>
   );
 });
 
 const styles = StyleSheet.create({
-  themeBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 999,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   swatchRow: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -170,7 +170,9 @@ function TaskFormSheetContent({
 
         {/* 分类快捷选择 */}
         <View>
-          <Text className="text-caption font-semibold text-ink dark:text-ink-dark mb-2">
+          <Text
+            style={{ color: palette.ink }}
+            className="text-caption font-semibold mb-2">
             任务分类（可选）
           </Text>
           <View className="flex-row gap-2">
@@ -209,7 +211,9 @@ function TaskFormSheetContent({
 
         {/* 滚动时间选择列表（带震动反馈） */}
         <View>
-          <Text className="text-caption font-semibold text-ink dark:text-ink-dark mb-2">
+          <Text
+            style={{ color: palette.ink }}
+            className="text-caption font-semibold mb-2">
             时间设定（可选）
           </Text>
           <ScrollTimePicker
@@ -235,9 +239,11 @@ function TaskFormSheetContent({
 
         {/* 预览副标题 */}
         {currentSubtitle ? (
-          <View className="flex-row items-center px-3 py-2 rounded-md bg-surface-muted dark:bg-surface-muted-dark">
+          <View
+            style={{ backgroundColor: palette.surfaceMuted }}
+            className="flex-row items-center px-3 py-2 rounded-md">
             <Ionicons name="information-circle-outline" size={16} color={palette.inkMuted} style={{ marginRight: 6 }} />
-            <Text className="text-micro text-ink-muted dark:text-ink-muted-dark">
+            <Text style={{ color: palette.inkMuted }} className="text-micro">
               提示行预览：{currentSubtitle}
             </Text>
           </View>
@@ -267,10 +273,12 @@ function TaskFormSheetContent({
           ]}
           className="min-h-[52px] rounded-md px-4 py-3 flex-row items-center justify-between">
           <View className="flex-1 mr-3">
-            <Text className="text-body-strong text-ink dark:text-ink-dark">
+            <Text style={{ color: palette.ink }} className="text-body-strong">
               设为今日重点（Top 3）
             </Text>
-            <Text className="text-caption text-ink-muted dark:text-ink-muted-dark mt-0.5">
+            <Text
+              style={{ color: palette.inkMuted }}
+              className="text-caption mt-0.5">
               {top3Full && !isTop3
                 ? '今日 Top 3 已满 3 条'
                 : '置顶展示在首页「今天最重要的三件事」'}
@@ -290,8 +298,10 @@ function TaskFormSheetContent({
 
         {/* 底部操作区 */}
         {confirmDelete && editingTask && onDelete ? (
-          <View className="p-4 rounded-md bg-surface-muted dark:bg-surface-muted-dark gap-3 mt-1">
-            <Text className="text-caption text-ink dark:text-ink-dark">
+          <View
+            style={{ backgroundColor: palette.surfaceMuted }}
+            className="p-4 rounded-md gap-3 mt-1">
+            <Text style={{ color: palette.ink }} className="text-caption">
               将删除这条任务，关联的历史专注记录仍会保留。
             </Text>
             <View className="flex-row gap-3">
@@ -321,7 +331,8 @@ function TaskFormSheetContent({
                 onPress={() => setConfirmDelete(true)}
                 accessibilityRole="button"
                 accessibilityLabel="删除任务"
-                className="h-[48px] px-4 rounded-md bg-surface-muted dark:bg-surface-muted-dark items-center justify-center">
+                style={{ backgroundColor: palette.surfaceMuted }}
+                className="h-[48px] px-4 rounded-md items-center justify-center">
                 <Ionicons name="trash-outline" size={20} color={palette.danger} />
               </Pressable>
             ) : null}

@@ -48,7 +48,9 @@ export function TopThreeSection({
   return (
     <View>
       <View className="flex-row items-center justify-between mb-4">
-        <Text className="text-h2 text-ink dark:text-ink-dark">今天最重要的三件事</Text>
+        <Text style={{ color: palette.ink }} className="text-h2">
+          今天最重要的三件事
+        </Text>
         {top3Tasks.length > 0 ? (
           <Pressable
             onPress={() => {
@@ -100,19 +102,23 @@ export function TopThreeSection({
               }}
               accessibilityRole="button"
               accessibilityLabel={`添加第 ${slotNumber} 件重点任务`}
-              className="min-h-[56px] rounded-lg border border-dashed border-line dark:border-line-dark px-4 py-3 flex-row items-center justify-between">
+              style={{ borderColor: palette.line }}
+              className="min-h-[56px] rounded-lg border border-dashed px-4 py-3 flex-row items-center justify-between">
               <View className="flex-row items-center">
                 <Ionicons name="add-outline" size={20} color={palette.inkSubtle} />
-                <Text className="text-body text-ink-subtle dark:text-ink-subtle-dark ml-2">
+                <Text
+                  style={{ color: palette.inkSubtle }}
+                  className="text-body ml-2">
                   添加第 {slotNumber} 件事
                 </Text>
               </View>
               <View
                 accessible={false}
-                className="w-[24px] h-[24px] rounded-sm bg-surface-muted dark:bg-surface-muted-dark items-center justify-center">
+                style={{ backgroundColor: palette.surfaceMuted }}
+                className="w-[24px] h-[24px] rounded-sm items-center justify-center">
                 <Text
-                  style={tabularNumsStyle}
-                  className="text-micro font-semibold text-ink-subtle dark:text-ink-subtle-dark">
+                  style={[tabularNumsStyle, { color: palette.inkSubtle }]}
+                  className="text-micro font-semibold">
                   {slotNumber}
                 </Text>
               </View>
@@ -124,7 +130,9 @@ export function TopThreeSection({
       {allThreeCompleted ? (
         <View className="flex-row items-center mt-3 px-1">
           <Ionicons name="checkmark-circle-outline" size={16} color={palette.success} />
-          <Text className="text-caption text-success dark:text-success-dark ml-1.5">
+          <Text
+            style={{ color: palette.success }}
+            className="text-caption ml-1.5">
             今天的重点已完成
           </Text>
         </View>

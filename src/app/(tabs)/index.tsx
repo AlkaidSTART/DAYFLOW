@@ -185,7 +185,7 @@ export default function TodayScreen() {
     <SafeAreaView
       edges={['top']}
       style={{ backgroundColor: palette.canvas }}
-      className="flex-1 bg-canvas dark:bg-canvas-dark">
+      className="flex-1">
       <TabPageTransition routeKey="today">
         <ScrollView
           showsVerticalScrollIndicator={false}
@@ -194,7 +194,9 @@ export default function TodayScreen() {
           {/* 顶部日期与设置入口 */}
           <View className="pt-4 pb-6">
             <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-caption text-ink-muted dark:text-ink-muted-dark">
+              <Text
+                style={{ color: palette.inkMuted }}
+                className="text-caption">
                 {formatTodayHeaderDate()}
               </Text>
 
@@ -218,7 +220,7 @@ export default function TodayScreen() {
               </Pressable>
             </View>
 
-            <Text className="text-h1 text-ink dark:text-ink-dark">
+            <Text style={{ color: palette.ink }} className="text-h1">
               {getGreetingByHour()}
             </Text>
           </View>
@@ -237,7 +239,12 @@ export default function TodayScreen() {
 
           {tasks.length === 0 ? (
             <View className="gap-8">
-              <View className="rounded-xl border border-dashed border-line dark:border-line-dark bg-surface dark:bg-surface-dark">
+              <View
+                style={{
+                  borderColor: palette.line,
+                  backgroundColor: palette.surface,
+                }}
+                className="rounded-xl border border-dashed">
                 <EmptyState
                   icon="sunny-outline"
                   description="今天还没有任务，从最重要的一件事开始。"
@@ -283,7 +290,9 @@ export default function TodayScreen() {
               {/* 其他任务区块 */}
               <View>
                 <View className="flex-row items-center justify-between mb-4">
-                  <Text className="text-h2 text-ink dark:text-ink-dark">其他任务</Text>
+                  <Text style={{ color: palette.ink }} className="text-h2">
+                    其他任务
+                  </Text>
                   {otherTasks.length > 0 ? (
                     <Pressable
                       onPress={() => {
@@ -327,7 +336,8 @@ export default function TodayScreen() {
                     }}
                     accessibilityRole="button"
                     accessibilityLabel="添加任务"
-                    className="min-h-[56px] rounded-lg border border-dashed border-line dark:border-line-dark px-4 py-3 flex-row items-center justify-center mt-1">
+                    style={{ borderColor: palette.line }}
+                    className="min-h-[56px] rounded-lg border border-dashed px-4 py-3 flex-row items-center justify-center mt-1">
                     <Ionicons name="add-circle-outline" size={20} color={palette.accent} />
                     <Text
                       style={{ color: palette.accent }}

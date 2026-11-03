@@ -66,7 +66,7 @@ export function Input({
       {label ? (
         <Text
           style={[styles.label, { color: palette.inkMuted }]}
-          className="text-caption text-ink-muted dark:text-ink-muted-dark mb-2">
+          className="text-caption mb-2">
           {label}
         </Text>
       ) : null}

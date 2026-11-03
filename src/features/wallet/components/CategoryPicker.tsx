@@ -27,7 +27,9 @@ export function CategoryPicker({
 
   return (
     <View>
-      <Text className="text-caption text-ink-muted dark:text-ink-muted-dark mb-2">
+      <Text
+        style={{ color: palette.inkMuted }}
+        className="text-caption mb-2">
         选择分类
       </Text>
 
