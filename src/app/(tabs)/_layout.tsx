@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Href, Tabs, usePathname, useRouter } from 'expo-router';
 import { motion } from 'motion/react';
 import React from 'react';
-import { Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Easing, Platform, Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useResolvedTheme } from '@/hooks/use-resolved-theme';
@@ -146,11 +146,46 @@ function DayflowBottomTabBar() {
 }
 
 export default function TabsLayout() {
+  const { palette } = useResolvedTheme();
+
   return (
     <Tabs
       tabBar={() => <DayflowBottomTabBar />}
       screenOptions={{
         headerShown: false,
+        animation: 'shift',
+        transitionSpec: {
+          animation: 'timing',
+          config: {
+            duration: 220,
+            easing: Easing.bezier(0.22, 1, 0.36, 1),
+          },
+        },
+        sceneStyle: {
+          backgroundColor: palette.canvas,
+        },
+        sceneStyleInterpolator: ({ current }) => ({
+          sceneStyle: {
+            opacity: current.progress.interpolate({
+              inputRange: [-1, 0, 1],
+              outputRange: [0, 1, 0],
+            }),
+            transform: [
+              {
+                translateX: current.progress.interpolate({
+                  inputRange: [-1, 0, 1],
+                  outputRange: [-36, 0, 36],
+                }),
+              },
+              {
+                scale: current.progress.interpolate({
+                  inputRange: [-1, 0, 1],
+                  outputRange: [0.98, 1, 0.98],
+                }),
+              },
+            ],
+          },
+        }),
       }}>
       <Tabs.Screen name="index" options={{ title: 'Today' }} />
       <Tabs.Screen name="focus" options={{ title: 'Focus' }} />
