@@ -2,10 +2,11 @@ const path = require('path');
 const { getDefaultConfig } = require('expo/metro-config');
 const { withNativeWind } = require('nativewind/metro');
 
-const config = getDefaultConfig(__dirname);
+const projectRoot = __dirname;
+const config = getDefaultConfig(projectRoot);
 
-// 强制从当前项目 node_modules 解析，防止向上查找到父目录的 React 副本导致 Invalid hook call
-config.resolver.nodeModulesPaths = [path.resolve(__dirname, 'node_modules')];
-config.resolver.disableHierarchicalLookup = true;
+// pnpm links packages into node_modules/.pnpm, so the hierarchical lookup must stay enabled:
+// disabling it makes transitive deps such as @expo/metro-runtime unresolvable.
+config.resolver.nodeModulesPaths = [path.resolve(projectRoot, 'node_modules')];
 
 module.exports = withNativeWind(config, { input: './src/global.css' });

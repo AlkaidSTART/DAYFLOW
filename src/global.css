@@ -24,3 +24,18 @@ textarea:focus-visible {
   outline: none !important;
   box-shadow: none !important;
 }
+
+/* 全局丝滑主题切换过渡（Web 平台） */
+@media (prefers-reduced-motion: no-preference) {
+  html,
+  body,
+  #root,
+  div,
+  span,
+  p,
+  a {
+    transition-property: background-color, border-color;
+    transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+    transition-duration: 300ms;
+  }
+}

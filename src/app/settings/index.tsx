@@ -18,7 +18,12 @@ import { useWalletStore } from '@/features/wallet/store/wallet-store';
 import { useResolvedTheme } from '@/hooks/use-resolved-theme';
 import { triggerHaptic } from '@/lib/haptics';
 import { formatVersionTag } from '@/lib/version';
-import { getCardSurfaceStyle, tabularNumsStyle } from '@/theme/tokens';
+import {
+  COLOR_SCHEMES_LIST,
+  ColorSchemeId,
+  getCardSurfaceStyle,
+  tabularNumsStyle,
+} from '@/theme/tokens';
 
 const THEME_OPTIONS: SegmentOption<ThemePreference>[] = [
   { value: 'light', label: '浅色' },
@@ -46,6 +51,7 @@ export default function SettingsScreen() {
   const { theme, palette } = useResolvedTheme();
 
   const themePreference = useSettingsStore((s) => s.themePreference);
+  const colorSchemeId = useSettingsStore((s) => s.colorSchemeId);
   const focusMinutes = useSettingsStore((s) => s.focusMinutes);
   const shortBreakMinutes = useSettingsStore((s) => s.shortBreakMinutes);
   const longBreakMinutes = useSettingsStore((s) => s.longBreakMinutes);
@@ -56,6 +62,7 @@ export default function SettingsScreen() {
   const monthStartDay = useSettingsStore((s) => s.monthStartDay);
 
   const setThemePreference = useSettingsStore((s) => s.setThemePreference);
+  const setColorSchemeId = useSettingsStore((s) => s.setColorSchemeId);
   const setFocusDuration = useSettingsStore((s) => s.setFocusDuration);
   const setKeepScreenAwake = useSettingsStore((s) => s.setKeepScreenAwake);
   const setHapticEnabled = useSettingsStore((s) => s.setHapticEnabled);
@@ -146,15 +153,124 @@ export default function SettingsScreen() {
             <Text className="text-caption font-semibold text-ink-muted dark:text-ink-muted-dark mb-3">
               1. 外观
             </Text>
-            <View style={getCardSurfaceStyle(theme)} className="rounded-lg p-4">
-              <Text className="text-body-strong text-ink dark:text-ink-dark mb-3">
-                主题模式
-              </Text>
-              <SegmentedControl
-                options={THEME_OPTIONS}
-                value={themePreference}
-                onChange={setThemePreference}
-              />
+            <View style={getCardSurfaceStyle(theme, palette)} className="rounded-lg p-4 gap-5">
+              <View>
+                <Text className="text-body-strong text-ink dark:text-ink-dark mb-3">
+                  主题模式
+                </Text>
+                <SegmentedControl
+                  options={THEME_OPTIONS}
+                  value={themePreference}
+                  onChange={(val) => {
+                    triggerHaptic('selection', hapticEnabled);
+                    setThemePreference(val);
+                  }}
+                />
+              </View>
+
+              <View className="pt-3 border-t border-line dark:border-line-dark">
+                <View className="flex-row items-center justify-between mb-3">
+                  <Text className="text-body-strong text-ink dark:text-ink-dark">
+                    配色方案
+                  </Text>
+                  <Text className="text-micro text-ink-subtle dark:text-ink-subtle-dark">
+                    仿 ChatGPT 质感调色盘
+                  </Text>
+                </View>
+
+                <View className="gap-2.5">
+                  {COLOR_SCHEMES_LIST.map((scheme) => {
+                    const isSelected = colorSchemeId === scheme.id;
+                    const preview = scheme.previewColors;
+
+                    return (
+                      <Pressable
+                        key={scheme.id}
+                        onPress={() => {
+                          if (!isSelected) {
+                            triggerHaptic('selection', hapticEnabled);
+                            setColorSchemeId(scheme.id);
+                          }
+                        }}
+                        accessibilityRole="radio"
+                        accessibilityState={{ checked: isSelected }}
+                        accessibilityLabel={`${scheme.name}配色`}
+                        style={[
+                          {
+                            backgroundColor: isSelected
+                              ? palette.accentSoft
+                              : palette.surfaceMuted,
+                            borderColor: isSelected
+                              ? scheme.accentColor
+                              : 'transparent',
+                            borderWidth: 1.5,
+                          },
+                        ]}
+                        className="rounded-md p-3 flex-row items-center justify-between">
+                        {/* 左侧：色彩预览指示与文本 */}
+                        <View className="flex-row items-center flex-1 mr-2">
+                          {/* 三色预览胶囊/徽章 */}
+                          <View
+                            style={{
+                              backgroundColor: preview.canvas,
+                              borderColor: scheme.accentColor,
+                            }}
+                            className="w-8 h-8 rounded-full border items-center justify-center mr-3 overflow-hidden shadow-xs">
+                            <View
+                              style={{ backgroundColor: scheme.accentColor }}
+                              className="w-4 h-4 rounded-full"
+                            />
+                          </View>
+
+                          <View className="flex-1">
+                            <View className="flex-row items-center">
+                              <Text
+                                style={{
+                                  color: palette.ink,
+                                  fontWeight: isSelected ? '600' : '500',
+                                }}
+                                className="text-body mr-2">
+                                {scheme.name}
+                              </Text>
+                              <Text
+                                style={{
+                                  color: isSelected
+                                    ? scheme.accentColor
+                                    : palette.inkSubtle,
+                                }}
+                                className="text-micro font-medium">
+                                {scheme.tagline}
+                              </Text>
+                            </View>
+                            <Text
+                              numberOfLines={1}
+                              style={{ color: palette.inkMuted }}
+                              className="text-micro mt-0.5">
+                              {scheme.description}
+                            </Text>
+                          </View>
+                        </View>
+
+                        {/* 右侧选中状态指示 */}
+                        <View className="items-center justify-center pl-1">
+                          {isSelected ? (
+                            <Ionicons
+                              name="checkmark-circle"
+                              size={22}
+                              color={scheme.accentColor}
+                            />
+                          ) : (
+                            <View
+                              style={{ borderColor: palette.line }}
+                              className="w-5 h-5 rounded-full border"
+                            />
+                          )}
+                        </View>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+              </View>
             </View>
           </View>
 

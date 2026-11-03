@@ -1,6 +1,9 @@
 import { create } from 'zustand';
 
+import { ColorSchemeId, DEFAULT_COLOR_SCHEME_ID } from '@/theme/tokens';
+
 export type ThemePreference = 'light' | 'dark' | 'system';
+export type { ColorSchemeId };
 
 export type SnackbarPayload = {
   id: string;
@@ -11,6 +14,7 @@ export type SnackbarPayload = {
 
 export type SettingsState = {
   themePreference: ThemePreference;
+  colorSchemeId: ColorSchemeId;
   focusMinutes: number;
   shortBreakMinutes: number;
   longBreakMinutes: number;
@@ -22,6 +26,7 @@ export type SettingsState = {
   snackbar: SnackbarPayload | null;
 
   setThemePreference: (theme: ThemePreference) => void;
+  setColorSchemeId: (colorSchemeId: ColorSchemeId) => void;
   setFocusDuration: (
     field: 'focusMinutes' | 'shortBreakMinutes' | 'longBreakMinutes',
     minutes: number,
@@ -36,6 +41,7 @@ export type SettingsState = {
 
 export const useSettingsStore = create<SettingsState>((set) => ({
   themePreference: 'system',
+  colorSchemeId: DEFAULT_COLOR_SCHEME_ID,
   focusMinutes: 25,
   shortBreakMinutes: 5,
   longBreakMinutes: 15,
@@ -47,6 +53,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   snackbar: null,
 
   setThemePreference: (themePreference) => set({ themePreference }),
+  setColorSchemeId: (colorSchemeId) => set({ colorSchemeId }),
   setFocusDuration: (field, minutes) => set({ [field]: minutes }),
   setKeepScreenAwake: (keepScreenAwake) => set({ keepScreenAwake }),
   setHapticEnabled: (hapticEnabled) => set({ hapticEnabled }),

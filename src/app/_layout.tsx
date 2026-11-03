@@ -5,15 +5,16 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { cssInterop, useColorScheme as useNativeWindColorScheme } from 'nativewind';
 import React, { useEffect } from 'react';
-import { Appearance, KeyboardAvoidingView, View } from 'react-native';
+import { Appearance, KeyboardAvoidingView } from 'react-native';
+import Animated, { Easing, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { Snackbar } from '@/components/ui/Snackbar';
+import { ThemeTransitionOverlay } from '@/components/ui/ThemeTransitionOverlay';
 import { UpdatePromptSheet } from '@/features/settings/components/UpdatePromptSheet';
 import { useSettingsStore } from '@/features/settings/store/settings-store';
 import { useVersionStore } from '@/features/settings/store/version-store';
 import { useResolvedTheme } from '@/hooks/use-resolved-theme';
-import { Palette } from '@/theme/tokens';
 
 // 注册第三方/复合容器组件以支持 NativeWind className
 cssInterop(SafeAreaView, { className: 'style' });
@@ -55,32 +56,40 @@ export default function RootLayout() {
         ...DarkTheme,
         colors: {
           ...DarkTheme.colors,
-          background: Palette.dark.canvas,
-          card: Palette.dark.surface,
-          text: Palette.dark.ink,
-          border: Palette.dark.line,
-          primary: Palette.dark.accent,
+          background: palette.canvas,
+          card: palette.surface,
+          text: palette.ink,
+          border: palette.line,
+          primary: palette.accent,
         },
       }
     : {
         ...DefaultTheme,
         colors: {
           ...DefaultTheme.colors,
-          background: Palette.light.canvas,
-          card: Palette.light.surface,
-          text: Palette.light.ink,
-          border: Palette.light.line,
-          primary: Palette.light.accent,
+          background: palette.canvas,
+          card: palette.surface,
+          text: palette.ink,
+          border: palette.line,
+          primary: palette.accent,
         },
       };
+
+  // 背景色丝滑插值，避免硬切换闪烁
+  const animatedRootStyle = useAnimatedStyle(() => ({
+    backgroundColor: withTiming(palette.canvas, {
+      duration: 320,
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+    }),
+  }), [palette.canvas]);
 
   return (
     <SafeAreaProvider>
       <ThemeProvider value={navigationTheme}>
         <StatusBar style={isDark ? 'light' : 'dark'} />
-        <View
-          style={{ flex: 1, backgroundColor: palette.canvas }}
-          className={`flex-1 bg-canvas dark:bg-canvas-dark ${isDark ? 'dark' : ''}`}>
+        <Animated.View
+          style={[{ flex: 1 }, animatedRootStyle]}
+          className={`flex-1 ${isDark ? 'dark' : ''}`}>
           <Stack
             screenOptions={{
               headerShown: false,
@@ -98,7 +107,8 @@ export default function RootLayout() {
           </Stack>
           <UpdatePromptSheet />
           <Snackbar />
-        </View>
+          <ThemeTransitionOverlay />
+        </Animated.View>
       </ThemeProvider>
     </SafeAreaProvider>
   );
