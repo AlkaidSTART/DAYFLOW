@@ -7,17 +7,21 @@ import { useResolvedTheme } from '@/hooks/use-resolved-theme';
 export type BannerTipProps = {
   tone?: 'accent' | 'warning';
   message: string;
+  actionLabel?: string;
+  onAction?: () => void;
   onDismiss?: () => void;
   className?: string;
 };
 
 /**
  * Section 6.12: 页面内提示条
- * accent-soft 或 warning 浅底，左侧图标，右侧可关闭；不使用长驻横幅
+ * accent-soft 或 warning 浅底，左侧图标，右侧可操作/可关闭；不使用长驻横幅
  */
 export function BannerTip({
   tone = 'accent',
   message,
+  actionLabel,
+  onAction,
   onDismiss,
   className = '',
 }: BannerTipProps) {
@@ -32,13 +36,25 @@ export function BannerTip({
       className={`flex-row items-center rounded-md px-4 py-3 bg-accent-soft dark:bg-accent-soft-dark ${className}`}>
       <Ionicons name={iconName} size={20} color={iconColor} />
       <Text className="flex-1 text-caption text-ink dark:text-ink-dark ml-2.5">{message}</Text>
+      {actionLabel && onAction ? (
+        <Pressable
+          onPress={onAction}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={actionLabel}
+          className="ml-2 px-2.5 py-1 rounded-sm bg-surface dark:bg-surface-dark items-center justify-center">
+          <Text className="text-caption font-semibold text-accent dark:text-accent-dark">
+            {actionLabel}
+          </Text>
+        </Pressable>
+      ) : null}
       {onDismiss ? (
         <Pressable
           onPress={onDismiss}
           hitSlop={12}
           accessibilityRole="button"
           accessibilityLabel="关闭提示"
-          className="ml-2 w-8 h-8 items-center justify-center">
+          className="ml-1.5 w-8 h-8 items-center justify-center">
           <Ionicons name="close-outline" size={18} color={palette.inkMuted} />
         </Pressable>
       ) : null}

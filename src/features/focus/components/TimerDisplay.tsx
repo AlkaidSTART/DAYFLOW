@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -22,6 +22,7 @@ export type TimerDisplayProps = {
   remainingSeconds: number;
   completedMinutes: number;
   onRestart: () => void;
+  onTapDigits?: () => void;
 };
 
 export function TimerDisplay({
@@ -31,6 +32,7 @@ export function TimerDisplay({
   remainingSeconds,
   completedMinutes,
   onRestart,
+  onTapDigits,
 }: TimerDisplayProps) {
   const { palette } = useResolvedTheme();
   const isBreak = mode !== 'focus';
@@ -39,6 +41,7 @@ export function TimerDisplay({
   const progressShared = useSharedValue(progressRatio * 100);
   const completeScale = useSharedValue(1);
   const completeOpacity = useSharedValue(1);
+  const digitScale = useSharedValue(1);
 
   useEffect(() => {
     progressShared.value = withTiming(progressRatio * 100, {
@@ -71,12 +74,19 @@ export function TimerDisplay({
     transform: [{ scale: completeScale.value }],
   }));
 
+  const digitAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: digitScale.value }],
+  }));
+
   const modeLabel = mode === 'focus' ? '专注' : mode === 'short_break' ? '短休息' : '长休息';
 
   if (phase === 'completed') {
     return (
       <Animated.View
-        style={[{ alignItems: 'center', paddingVertical: 24, paddingHorizontal: 24 }, completeAnimatedStyle]}>
+        style={[
+          { alignItems: 'center', paddingVertical: 24, paddingHorizontal: 24 },
+          completeAnimatedStyle,
+        ]}>
         <View
           accessible={false}
           className="w-14 h-14 rounded-full bg-surface-muted dark:bg-surface-muted-dark items-center justify-center mb-4">
@@ -123,17 +133,38 @@ export function TimerDisplay({
         </Text>
       </View>
 
-      {/* 64/72 Display 计时数字 */}
-      <Text
-        style={tabularNumsStyle}
-        accessibilityLiveRegion="polite"
-        className={`text-display-lg tracking-tight ${
-          phase === 'paused'
-            ? 'text-ink-muted dark:text-ink-muted-dark'
-            : 'text-ink dark:text-ink-dark'
+      {/* 64/72 Display 计时数字（点击数字可直接开始 / 暂停 / 继续） */}
+      <Pressable
+        onPress={onTapDigits}
+        onPressIn={() => {
+          digitScale.value = withTiming(0.96, {
+            duration: 100,
+            easing: Easing.out(Easing.quad),
+          });
+        }}
+        onPressOut={() => {
+          digitScale.value = withTiming(1, {
+            duration: 140,
+            easing: Easing.out(Easing.quad),
+          });
+        }}
+        accessibilityRole="button"
+        accessibilityLabel={`倒计时 ${formatTimerMMSS(remainingSeconds)}，点击可${
+          phase === 'running' ? '暂停' : '开始'
         }`}>
-        {formatTimerMMSS(remainingSeconds)}
-      </Text>
+        <Animated.View style={digitAnimatedStyle}>
+          <Text
+            style={tabularNumsStyle}
+            accessibilityLiveRegion="polite"
+            className={`text-display-lg tracking-tight ${
+              phase === 'paused'
+                ? 'text-ink-muted dark:text-ink-muted-dark'
+                : 'text-ink dark:text-ink-dark'
+            }`}>
+            {formatTimerMMSS(remainingSeconds)}
+          </Text>
+        </Animated.View>
+      </Pressable>
 
       {/* 计时器下方 4px 线性进度条 */}
       <View className="w-[220px] h-[4px] rounded-full bg-surface-muted dark:bg-surface-muted-dark mt-6 overflow-hidden">

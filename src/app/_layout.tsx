@@ -9,7 +9,9 @@ import { Appearance, KeyboardAvoidingView, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { Snackbar } from '@/components/ui/Snackbar';
+import { UpdatePromptSheet } from '@/features/settings/components/UpdatePromptSheet';
 import { useSettingsStore } from '@/features/settings/store/settings-store';
+import { useVersionStore } from '@/features/settings/store/version-store';
 import { useResolvedTheme } from '@/hooks/use-resolved-theme';
 import { Palette } from '@/theme/tokens';
 
@@ -21,6 +23,7 @@ SplashScreen.preventAutoHideAsync().catch(() => {});
 
 export default function RootLayout() {
   const themePreference = useSettingsStore((s) => s.themePreference);
+  const checkForUpdates = useVersionStore((s) => s.checkForUpdates);
   const { setColorScheme } = useNativeWindColorScheme();
   const { isDark, palette } = useResolvedTheme();
 
@@ -41,6 +44,11 @@ export default function RootLayout() {
   useEffect(() => {
     SplashScreen.hideAsync().catch(() => {});
   }, []);
+
+  // 启动时静默对比当前版本与 GitHub 仓库最新版本，落后时温和提示乐观更新
+  useEffect(() => {
+    checkForUpdates({ silent: true }).catch(() => {});
+  }, [checkForUpdates]);
 
   const navigationTheme = isDark
     ? {
@@ -88,6 +96,7 @@ export default function RootLayout() {
               }}
             />
           </Stack>
+          <UpdatePromptSheet />
           <Snackbar />
         </View>
       </ThemeProvider>

@@ -114,9 +114,11 @@ export default function FocusScreen() {
     if (nextMode === mode) return;
     // PRD 4.2.7: 模式切换在计时进行中不可直接生效，需先结束或确认放弃当前计时
     if (phase === 'running' || phase === 'paused') {
+      triggerHaptic('warning', hapticEnabled);
       setModeSwitchNotice('计时进行中，请先结束当前计时后再切换模式');
       return;
     }
+    triggerHaptic('selection', hapticEnabled);
     setModeSwitchNotice(null);
     switchMode(nextMode, getDurationForMode(nextMode));
   };
@@ -138,75 +140,96 @@ export default function FocusScreen() {
   };
 
   const handleSkipBreak = () => {
+    triggerHaptic('selection', hapticEnabled);
     switchMode('focus', focusMinutes);
+  };
+
+  const handleTapDigits = () => {
+    if (phase === 'idle') {
+      handleStart();
+    } else if (phase === 'running') {
+      handlePause();
+    } else if (phase === 'paused') {
+      handleResume();
+    }
   };
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-canvas dark:bg-canvas-dark px-6">
       <TabPageTransition routeKey="focus">
-      <View className="flex-1 justify-between py-6">
-        {/* 顶部：标题 + 模式切换 */}
-        <View>
-          <Text className="text-h1 text-ink dark:text-ink-dark text-center mb-6">
-            专注
-          </Text>
-          <ModeSwitch mode={mode} onSelectMode={handleSelectMode} />
-
-          {modeSwitchNotice ? (
-            <BannerTip
-              tone="warning"
-              message={modeSwitchNotice}
-              onDismiss={() => setModeSwitchNotice(null)}
-              className="mt-4"
-            />
-          ) : null}
-        </View>
-
-        {/* 中部：计时器与控制区（竖向居中） */}
-        <View className="items-center justify-center my-auto">
-          <TimerDisplay
-            mode={mode}
-            phase={phase}
-            plannedSeconds={plannedSeconds}
-            remainingSeconds={remainingSeconds}
-            completedMinutes={lastCompletedMinutes}
-            onRestart={() => resetAfterComplete(getDurationForMode(mode))}
-          />
-
-          <TimerControls
-            mode={mode}
-            phase={phase}
-            linkedTaskTitle={linkedTask?.title ?? null}
-            onPressTaskLink={() => setTaskSheetVisible(true)}
-            onStart={handleStart}
-            onPause={handlePause}
-            onResume={handleResume}
-            onRequestFinish={() => setFinishSheetVisible(true)}
-            onSkipBreak={handleSkipBreak}
-          />
-        </View>
-
-        {/* 底部：时长配比与今日统计一行 */}
-        <View className="items-center gap-1.5 pb-2">
-          <Text
-            style={tabularNumsStyle}
-            className="text-caption text-ink-muted dark:text-ink-muted-dark">
-            专注 {focusMinutes} 分钟 · 休息 {shortBreakMinutes} 分钟 · 长休 {longBreakMinutes} 分钟
-          </Text>
-
-          {todayStats.count === 0 ? (
-            <Text className="text-micro text-ink-subtle dark:text-ink-subtle-dark">
-              还没有专注记录，开始第一个 {focusMinutes} 分钟。
+        <View className="flex-1 justify-between py-6">
+          {/* 顶部：标题 + 模式切换 */}
+          <View>
+            <Text className="text-h1 text-ink dark:text-ink-dark text-center mb-6">
+              专注
             </Text>
-          ) : (
+            <ModeSwitch mode={mode} onSelectMode={handleSelectMode} />
+
+            {modeSwitchNotice ? (
+              <BannerTip
+                tone="warning"
+                message={modeSwitchNotice}
+                onDismiss={() => setModeSwitchNotice(null)}
+                className="mt-4"
+              />
+            ) : null}
+          </View>
+
+          {/* 中部：计时器与控制区（竖向居中） */}
+          <View className="items-center justify-center my-auto">
+            <TimerDisplay
+              mode={mode}
+              phase={phase}
+              plannedSeconds={plannedSeconds}
+              remainingSeconds={remainingSeconds}
+              completedMinutes={lastCompletedMinutes}
+              onRestart={() => {
+                triggerHaptic('start', hapticEnabled);
+                resetAfterComplete(getDurationForMode(mode));
+              }}
+              onTapDigits={handleTapDigits}
+            />
+
+            <TimerControls
+              mode={mode}
+              phase={phase}
+              linkedTaskTitle={linkedTask?.title ?? null}
+              onPressTaskLink={() => {
+                triggerHaptic('selection', hapticEnabled);
+                setTaskSheetVisible(true);
+              }}
+              onStart={handleStart}
+              onPause={handlePause}
+              onResume={handleResume}
+              onRequestFinish={() => {
+                triggerHaptic('selection', hapticEnabled);
+                setFinishSheetVisible(true);
+              }}
+              onSkipBreak={handleSkipBreak}
+            />
+          </View>
+
+          {/* 底部：时长配比与今日统计一行 */}
+          <View className="items-center gap-1.5 pb-2">
             <Text
               style={tabularNumsStyle}
-              className="text-micro text-ink-subtle dark:text-ink-subtle-dark">
-              今日已完成 {todayStats.count} 次专注 · 共 {todayStats.minutes} 分钟
+              className="text-caption text-ink-muted dark:text-ink-muted-dark">
+              专注 {focusMinutes} 分钟 · 休息 {shortBreakMinutes} 分钟 · 长休 {longBreakMinutes} 分钟
             </Text>
-          )}
+
+            {todayStats.count === 0 ? (
+              <Text className="text-micro text-ink-subtle dark:text-ink-subtle-dark">
+                还没有专注记录，开始第一个 {focusMinutes} 分钟。
+              </Text>
+            ) : (
+              <Text
+                style={tabularNumsStyle}
+                className="text-micro text-ink-subtle dark:text-ink-subtle-dark">
+                今日已完成 {todayStats.count} 次专注 · 共 {todayStats.minutes} 分钟
+              </Text>
+            )}
+          </View>
         </View>
-      </View>
       </TabPageTransition>
 
       {/* 关联任务选择弹层 */}
@@ -214,7 +237,10 @@ export default function FocusScreen() {
         visible={taskSheetVisible}
         tasks={tasks}
         selectedTaskId={linkedTaskId}
-        onSelect={setLinkedTaskId}
+        onSelect={(id) => {
+          triggerHaptic('selection', hapticEnabled);
+          setLinkedTaskId(id);
+        }}
         onClose={() => setTaskSheetVisible(false)}
       />
 

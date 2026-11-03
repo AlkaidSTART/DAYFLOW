@@ -48,6 +48,7 @@ jobs:
       - name: Set Android version code
         env:
           BUILD_NUMBER: ${{ github.run_number }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
         run: node scripts/set-android-version.js
 
       - name: Prebuild Android project

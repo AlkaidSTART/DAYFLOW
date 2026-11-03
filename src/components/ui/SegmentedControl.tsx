@@ -3,6 +3,7 @@ import React, { useId } from 'react';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useResolvedTheme } from '@/hooks/use-resolved-theme';
+import { useHaptic } from '@/lib/haptics';
 import { RadiusTokens } from '@/theme/tokens';
 
 export type SegmentOption<T extends string> = {
@@ -19,7 +20,7 @@ export type SegmentedControlProps<T extends string> = {
 
 /**
  * Section 6.5 & 6.8: Segmented Control
- * 选中底 surface-selected（支持 motion layoutId 滑动胶囊动效），选中文字 ink，未选中 ink-muted
+ * 选中底 surface-selected（支持 motion layoutId 滑动胶囊动效 + 触觉反馈），选中文字 ink，未选中 ink-muted
  */
 export function SegmentedControl<T extends string>({
   options,
@@ -28,6 +29,7 @@ export function SegmentedControl<T extends string>({
   className = '',
 }: SegmentedControlProps<T>) {
   const { palette } = useResolvedTheme();
+  const { haptic } = useHaptic();
   const groupId = useId();
 
   return (
@@ -43,7 +45,12 @@ export function SegmentedControl<T extends string>({
         return (
           <Pressable
             key={opt.value}
-            onPress={() => onChange(opt.value)}
+            onPress={() => {
+              if (opt.value !== value) {
+                haptic('selection');
+              }
+              onChange(opt.value);
+            }}
             accessibilityRole="tab"
             accessibilityState={{ selected }}
             accessibilityLabel={opt.label}

@@ -292,7 +292,12 @@ export default function SettingsScreen() {
                 </View>
                 <Switch
                   value={hapticEnabled}
-                  onValueChange={setHapticEnabled}
+                  onValueChange={(val) => {
+                    setHapticEnabled(val);
+                    if (val) {
+                      triggerHaptic('taskDone', true);
+                    }
+                  }}
                   trackColor={{ false: palette.line, true: palette.accent }}
                   thumbColor="#FFFFFF"
                   accessibilityLabel="触觉反馈"
