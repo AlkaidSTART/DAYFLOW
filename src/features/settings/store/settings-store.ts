@@ -33,6 +33,7 @@ export type SettingsState = {
   ) => void;
   setKeepScreenAwake: (value: boolean) => void;
   setHapticEnabled: (value: boolean) => void;
+  toggleHapticEnabled: () => void;
   setNotificationsEnabled: (value: boolean) => void;
   setBudgetThresholdPercent: (percent: number) => void;
   showSnackbar: (message: string, onUndo?: () => void, undoLabel?: string) => void;
@@ -57,6 +58,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setFocusDuration: (field, minutes) => set({ [field]: minutes }),
   setKeepScreenAwake: (keepScreenAwake) => set({ keepScreenAwake }),
   setHapticEnabled: (hapticEnabled) => set({ hapticEnabled }),
+  toggleHapticEnabled: () => set((state) => ({ hapticEnabled: !state.hapticEnabled })),
   setNotificationsEnabled: (notificationsEnabled) => set({ notificationsEnabled }),
   setBudgetThresholdPercent: (budgetThresholdPercent) => set({ budgetThresholdPercent }),
   showSnackbar: (message, onUndo, undoLabel = '撤销') =>

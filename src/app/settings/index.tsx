@@ -432,17 +432,32 @@ export default function SettingsScreen() {
             </View>
           </View>
 
-          {/* 3. 反馈 */}
+          {/* 3. 反馈与震动 */}
           <View>
             <Text className="text-caption font-semibold text-ink-muted dark:text-ink-muted-dark mb-3">
-              3. 反馈
+              3. 反馈与震动
             </Text>
             <View style={getCardSurfaceStyle(theme, palette)} className="rounded-lg p-4 gap-4">
               <View className="flex-row items-center justify-between min-h-[48px]">
                 <View className="flex-1 mr-4">
-                  <Text className="text-body text-ink dark:text-ink-dark">触觉反馈</Text>
+                  <View className="flex-row items-center gap-1.5 mb-0.5">
+                    <Text className="text-body text-ink dark:text-ink-dark">触觉震动反馈</Text>
+                    <View
+                      style={{
+                        backgroundColor: hapticEnabled ? `${palette.accent}18` : palette.surfaceMuted,
+                      }}
+                      className="px-1.5 py-0.5 rounded-sm">
+                      <Text
+                        style={{ color: hapticEnabled ? palette.accent : palette.inkSubtle }}
+                        className="text-micro font-semibold">
+                        {hapticEnabled ? '已开启' : '已禁止'}
+                      </Text>
+                    </View>
+                  </View>
                   <Text className="text-caption text-ink-muted dark:text-ink-muted-dark">
-                    完成任务与专注操作时提供轻量震动
+                    {hapticEnabled
+                      ? '底部 Tab 切换、滚轮滑动、完成任务与专注计时均提供触觉震动'
+                      : '已全局禁止所有触觉震动反馈'}
                   </Text>
                 </View>
                 <Switch
@@ -451,12 +466,48 @@ export default function SettingsScreen() {
                     setHapticEnabled(val);
                     if (val) {
                       triggerHaptic('taskDone', true);
+                      showSnackbar('已开启触觉震动');
+                    } else {
+                      showSnackbar('已全局禁止震动');
                     }
                   }}
                   trackColor={{ false: palette.line, true: palette.accent }}
                   thumbColor="#FFFFFF"
-                  accessibilityLabel="触觉反馈"
+                  accessibilityLabel="全局触觉震动开关"
                 />
+              </View>
+
+              {/* 快捷一键禁止 / 开启按钮 */}
+              <View className="flex-row justify-end">
+                <Pressable
+                  onPress={() => {
+                    const nextVal = !hapticEnabled;
+                    setHapticEnabled(nextVal);
+                    if (nextVal) {
+                      triggerHaptic('taskDone', true);
+                      showSnackbar('已开启触觉震动');
+                    } else {
+                      showSnackbar('已全局禁止震动');
+                    }
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={hapticEnabled ? '禁止震动' : '开启震动'}
+                  style={{
+                    backgroundColor: hapticEnabled ? palette.surfaceMuted : palette.accentSoft,
+                  }}
+                  className="px-3 py-1.5 rounded-md flex-row items-center">
+                  <Ionicons
+                    name={hapticEnabled ? 'volume-mute-outline' : 'pulse-outline'}
+                    size={16}
+                    color={hapticEnabled ? palette.inkMuted : palette.accent}
+                    style={{ marginRight: 4 }}
+                  />
+                  <Text
+                    style={{ color: hapticEnabled ? palette.ink : palette.accent }}
+                    className="text-caption font-semibold">
+                    {hapticEnabled ? '一键禁止震动' : '开启全局震动'}
+                  </Text>
+                </Pressable>
               </View>
 
               <View className="pt-3 border-t border-line dark:border-line-dark flex-row items-center justify-between min-h-[48px]">

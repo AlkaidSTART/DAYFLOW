@@ -32,8 +32,10 @@ const WEB_VIBRATE_PATTERNS: Record<HapticKind, number | number[]> = {
  * - 选择器 / 分段切换 -> Selection
  * - Web 端同步支持 navigator.vibrate
  */
-export async function triggerHaptic(kind: HapticKind, enabled: boolean): Promise<void> {
-  if (!enabled) return;
+export async function triggerHaptic(kind: HapticKind, enabled?: boolean): Promise<void> {
+  const globalEnabled = useSettingsStore.getState().hapticEnabled;
+  const isEnabled = enabled !== undefined ? enabled : globalEnabled;
+  if (!isEnabled || !globalEnabled) return;
 
   if (Platform.OS === 'web') {
     try {
