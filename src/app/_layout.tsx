@@ -3,15 +3,19 @@ import '@/global.css';
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useColorScheme as useNativeWindColorScheme } from 'nativewind';
+import { cssInterop, useColorScheme as useNativeWindColorScheme } from 'nativewind';
 import React, { useEffect } from 'react';
-import { Appearance, View } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Appearance, KeyboardAvoidingView, View } from 'react-native';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { Snackbar } from '@/components/ui/Snackbar';
 import { useSettingsStore } from '@/features/settings/store/settings-store';
 import { useResolvedTheme } from '@/hooks/use-resolved-theme';
 import { Palette } from '@/theme/tokens';
+
+// 注册第三方/复合容器组件以支持 NativeWind className
+cssInterop(SafeAreaView, { className: 'style' });
+cssInterop(KeyboardAvoidingView, { className: 'style' });
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -66,7 +70,9 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ThemeProvider value={navigationTheme}>
         <StatusBar style={isDark ? 'light' : 'dark'} />
-        <View className={`flex-1 bg-canvas dark:bg-canvas-dark ${isDark ? 'dark' : ''}`}>
+        <View
+          style={{ flex: 1, backgroundColor: palette.canvas }}
+          className={`flex-1 bg-canvas dark:bg-canvas-dark ${isDark ? 'dark' : ''}`}>
           <Stack
             screenOptions={{
               headerShown: false,

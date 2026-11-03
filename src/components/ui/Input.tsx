@@ -1,8 +1,17 @@
 import React, { useState } from 'react';
-import { Text, TextInput, TextInputProps, View } from 'react-native';
+import {
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TextInputProps,
+  TextStyle,
+  View,
+  ViewStyle,
+} from 'react-native';
 
 import { useResolvedTheme } from '@/hooks/use-resolved-theme';
-import { tabularNumsStyle } from '@/theme/tokens';
+import { RadiusTokens, tabularNumsStyle } from '@/theme/tokens';
 
 export type InputProps = TextInputProps & {
   label?: string;
@@ -13,10 +22,10 @@ export type InputProps = TextInputProps & {
 
 /**
  * Section 6.10: 输入框
- * 默认：surface-muted 底，无边框，圆角 md，高 48
- * 聚焦：1px accent 边框
- * 金额输入：数字键盘，右对齐，tabular-nums，前置 ¥ 固定
- * 错误态：danger 边框 + 下方 Caption 说明
+ * - 默认：surface-muted 底，无边框，圆角 md (14px)，高 48
+ * - 聚焦：1px accent 边框 + accent-soft 外发光（只在 Web/浅色使用，原生用边框即可）
+ * - 金额输入：数字键盘，右对齐，tabular-nums，前置 ¥ 固定
+ * - 错误态：danger 边框 + 下方 Caption 说明
  */
 export function Input({
   label,
@@ -29,26 +38,55 @@ export function Input({
   ...rest
 }: InputProps) {
   const [focused, setFocused] = useState(false);
-  const { palette } = useResolvedTheme();
+  const { isDark, palette } = useResolvedTheme();
 
-  const borderClass = error
-    ? 'border border-danger dark:border-danger-dark'
+  const borderColor = error
+    ? palette.danger
     : focused
-      ? 'border border-accent dark:border-accent-dark'
-      : 'border border-transparent';
+      ? palette.accent
+      : 'transparent';
+
+  const webFocusGlow: ViewStyle =
+    Platform.OS === 'web' && focused && !error && !isDark
+      ? ({
+          boxShadow: `0 0 0 3px ${palette.accentSoft}`,
+        } as unknown as ViewStyle)
+      : {};
+
+  const webNoOutline: TextStyle =
+    Platform.OS === 'web'
+      ? ({
+          outlineStyle: 'none',
+          outlineWidth: 0,
+        } as unknown as TextStyle)
+      : {};
 
   return (
     <View className={containerClassName}>
       {label ? (
-        <Text className="text-caption text-ink-muted dark:text-ink-muted-dark mb-2">{label}</Text>
+        <Text
+          style={[styles.label, { color: palette.inkMuted }]}
+          className="text-caption text-ink-muted dark:text-ink-muted-dark mb-2">
+          {label}
+        </Text>
       ) : null}
 
       <View
-        className={`min-h-[48px] rounded-md bg-surface-muted dark:bg-surface-muted-dark px-4 flex-row items-center ${borderClass}`}>
+        style={[
+          styles.fieldWrapper,
+          {
+            backgroundColor: palette.surfaceMuted,
+            borderColor,
+          },
+          webFocusGlow,
+        ]}>
         {isAmount ? (
           <Text
-            style={tabularNumsStyle}
-            className="text-h2 text-ink dark:text-ink-dark mr-2 font-semibold">
+            style={[
+              tabularNumsStyle,
+              styles.currencyPrefix,
+              { color: palette.ink },
+            ]}>
             ¥
           </Text>
         ) : null}
@@ -66,20 +104,67 @@ export function Input({
             onBlur?.(e);
           }}
           accessibilityLabel={rest.accessibilityLabel ?? label}
-          style={[isAmount ? tabularNumsStyle : undefined, style]}
-          className={`flex-1 py-2.5 text-ink dark:text-ink-dark ${
-            isAmount ? 'text-h2 text-right font-semibold' : 'text-body'
-          }`}
+          style={[
+            styles.inputBase,
+            { color: palette.ink },
+            isAmount ? [tabularNumsStyle, styles.amountInput] : styles.textInput,
+            webNoOutline,
+            style,
+          ]}
         />
       </View>
 
       {error ? (
         <Text
           accessibilityLiveRegion="polite"
-          className="text-caption text-danger dark:text-danger-dark mt-1.5">
+          style={[styles.errorText, { color: palette.danger }]}>
           {error}
         </Text>
       ) : null}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  label: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  fieldWrapper: {
+    minHeight: 48,
+    borderRadius: RadiusTokens.md,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  currencyPrefix: {
+    fontSize: 22,
+    lineHeight: 30,
+    fontWeight: '600',
+    marginRight: 8,
+  },
+  inputBase: {
+    flex: 1,
+    paddingVertical: 10,
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+  },
+  textInput: {
+    fontSize: 16,
+    lineHeight: 24,
+    fontWeight: '400',
+  },
+  amountInput: {
+    fontSize: 22,
+    lineHeight: 30,
+    fontWeight: '600',
+    textAlign: 'right',
+  },
+  errorText: {
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: 6,
+  },
+});

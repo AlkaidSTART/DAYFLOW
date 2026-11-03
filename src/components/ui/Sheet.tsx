@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { AnimatePresence, motion } from 'motion/react';
 import React, { useEffect } from 'react';
 import {
   KeyboardAvoidingView,
@@ -30,19 +31,20 @@ export type SheetProps = {
 
 /**
  * Section 6.11 & 8.2: 底部弹层（Sheet）
- * 顶部圆角 xl (28px)，背景 surface（不透明实色），拖拽指示条 36×4 line
- * 遮罩 rgba(28, 25, 23, 0.35) (200ms easeOut)
- * 弹层入场 280ms cubic-bezier(0.32, 0.72, 0, 1)
- * 最大高度 85%，内容超出可滚动
+ * - 顶部圆角 xl (28px)，背景 surface（实色不透明），拖拽指示条 36×4 line
+ * - 遮罩 rgba(28, 25, 23, 0.35) (200ms easeOut)
+ * - 弹层入场 280ms cubic-bezier(0.32, 0.72, 0, 1)，从底部向上滑出
+ * - 最大高度 85%，内容超出可滚动
  */
 export function Sheet({ visible, onClose, title, children }: SheetProps) {
   const insets = useSafeAreaInsets();
   const { palette } = useResolvedTheme();
 
-  const translateY = useSharedValue(420);
+  const translateY = useSharedValue(480);
   const backdropOpacity = useSharedValue(0);
 
   useEffect(() => {
+    if (Platform.OS === 'web') return;
     if (visible) {
       backdropOpacity.value = withTiming(1, {
         duration: 200,
@@ -54,7 +56,7 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
       });
     } else {
       backdropOpacity.value = 0;
-      translateY.value = 420;
+      translateY.value = 480;
     }
   }, [visible, backdropOpacity, translateY]);
 
@@ -65,6 +67,106 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
   const sheetStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
   }));
+
+  if (Platform.OS === 'web') {
+    return (
+      <AnimatePresence>
+        {visible ? (
+          <Modal
+            visible={visible}
+            transparent
+            animationType="none"
+            onRequestClose={onClose}>
+            <div
+              style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 1000,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'flex-end',
+              }}>
+              {/* 半透明遮罩 */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
+                onClick={onClose}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  backgroundColor: palette.overlay,
+                  backdropFilter: 'blur(2px)',
+                  cursor: 'pointer',
+                }}
+              />
+
+              {/* 底部实色弹层 */}
+              <motion.div
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{
+                  duration: 0.28,
+                  ease: [0.32, 0.72, 0, 1],
+                }}
+                style={{
+                  position: 'relative',
+                  zIndex: 1,
+                  width: '100%',
+                  maxHeight: '85vh',
+                  backgroundColor: palette.surface,
+                  borderTopLeftRadius: RadiusTokens.xl,
+                  borderTopRightRadius: RadiusTokens.xl,
+                  borderTop: `1px solid ${palette.line}`,
+                  paddingLeft: 24,
+                  paddingRight: 24,
+                  paddingTop: 12,
+                  paddingBottom: Math.max(insets.bottom, 24),
+                  boxShadow: '0px -8px 28px rgba(28, 25, 23, 0.16)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}>
+                {/* 36×4 拖拽指示条 */}
+                <View accessible={false} style={styles.handleWrapper}>
+                  <View
+                    style={[
+                      styles.handleBar,
+                      { backgroundColor: palette.line },
+                    ]}
+                  />
+                </View>
+
+                {title ? (
+                  <View style={styles.headerRow}>
+                    <Text style={[styles.titleText, { color: palette.ink }]}>
+                      {title}
+                    </Text>
+                    <Pressable
+                      onPress={onClose}
+                      hitSlop={12}
+                      accessibilityRole="button"
+                      accessibilityLabel="关闭"
+                      style={styles.closeBtn}>
+                      <Ionicons name="close-outline" size={24} color={palette.inkMuted} />
+                    </Pressable>
+                  </View>
+                ) : null}
+
+                <ScrollView
+                  showsVerticalScrollIndicator={false}
+                  keyboardShouldPersistTaps="handled"
+                  contentContainerStyle={styles.scrollContent}>
+                  {children}
+                </ScrollView>
+              </motion.div>
+            </div>
+          </Modal>
+        ) : null}
+      </AnimatePresence>
+    );
+  }
 
   if (!visible) return null;
 
@@ -116,11 +218,7 @@ export function Sheet({ visible, onClose, title, children }: SheetProps) {
 
           {title ? (
             <View style={styles.headerRow}>
-              <Text
-                style={[
-                  styles.titleText,
-                  { color: palette.ink },
-                ]}>
+              <Text style={[styles.titleText, { color: palette.ink }]}>
                 {title}
               </Text>
               <Pressable
@@ -172,9 +270,6 @@ const styles = StyleSheet.create({
       android: {
         elevation: 16,
       },
-      web: {
-        boxShadow: '0px -6px 24px rgba(28, 25, 23, 0.14)',
-      } as unknown as object,
     }),
   },
   handleWrapper: {
