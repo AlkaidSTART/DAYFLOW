@@ -66,10 +66,11 @@ type ParsedSemver = {
   minor: number;
   patch: number;
   prerelease: string | null;
+  buildNum: number | null;
 };
 
 /**
- * 解析语义化版本号（支持 x.y.z 及预发布后缀如 1.2.0-beta.1）
+ * 解析语义化版本号（支持 x.y.z 及预发布后缀如 1.2.0-beta.1、1.0.0-build.5）
  */
 export function parseSemver(version: string): ParsedSemver {
   const clean = normalizeVersion(version);
@@ -79,11 +80,20 @@ export function parseSemver(version: string): ParsedSemver {
     return Number.isFinite(n) ? n : 0;
   });
 
+  let buildNum: number | null = null;
+  if (prereleasePart) {
+    const match = prereleasePart.match(/^build\.?(\d+)$/i);
+    if (match) {
+      buildNum = Number.parseInt(match[1], 10);
+    }
+  }
+
   return {
     major: segments[0] ?? 0,
     minor: segments[1] ?? 0,
     patch: segments[2] ?? 0,
     prerelease: prereleasePart ?? null,
+    buildNum,
   };
 }
 
@@ -101,7 +111,16 @@ export function compareVersions(current: string, target: string): -1 | 0 | 1 {
   if (a.minor !== b.minor) return a.minor < b.minor ? -1 : 1;
   if (a.patch !== b.patch) return a.patch < b.patch ? -1 : 1;
 
-  // 正式版高于同版本号的预发布版（例如 1.0.0 > 1.0.0-beta.1）
+  // 若两者核心语义版本相同，且包含 CI 打包编号（build.X）：
+  // 无 build 后缀的基础版视作 build 0（即未经打包递增的基础代码）
+  if (a.buildNum !== null || b.buildNum !== null) {
+    const aNum = a.buildNum ?? 0;
+    const bNum = b.buildNum ?? 0;
+    if (aNum !== bNum) return aNum < bNum ? -1 : 1;
+    return 0;
+  }
+
+  // 常规语义化预发布标签（例如 1.0.0 正式版高于 1.0.0-beta.1）
   if (a.prerelease === null && b.prerelease !== null) return 1;
   if (a.prerelease !== null && b.prerelease === null) return -1;
   if (a.prerelease !== null && b.prerelease !== null) {
@@ -269,7 +288,13 @@ export async function fetchLatestRepoVersion(): Promise<RemoteVersionInfo> {
     throw new Error('无法连接至 GitHub 仓库获取版本信息，请稍后重试');
   }
 
-  // 取所有成功返回来源中版本号最高的一项（若版本号相同则优先保留包含 Release Notes 和 APK 的项）
-  candidates.sort((a, b) => compareVersions(b.version, a.version));
+  // 取所有成功返回来源中版本号最高的一项（若版本号相同则优先保留包含 APK 下载链接的项）
+  candidates.sort((a, b) => {
+    const cmp = compareVersions(b.version, a.version);
+    if (cmp !== 0) return cmp;
+    if (b.apkDownloadUrl && !a.apkDownloadUrl) return 1;
+    if (!b.apkDownloadUrl && a.apkDownloadUrl) return -1;
+    return 0;
+  });
   return candidates[0];
 }
