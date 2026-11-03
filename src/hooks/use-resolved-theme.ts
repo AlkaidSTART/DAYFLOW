@@ -1,4 +1,5 @@
 import { useColorScheme as useNativeWindColorScheme } from 'nativewind';
+import { useMemo } from 'react';
 import { useColorScheme as useRNColorScheme } from 'react-native';
 
 import { useSettingsStore } from '@/features/settings/store/settings-store';
@@ -40,12 +41,15 @@ export function useResolvedTheme(): UseResolvedThemeResult {
   const palette = currentScheme[resolved];
   const chartColors = currentScheme.chartColors[resolved];
 
-  return {
-    theme: resolved,
-    isDark: resolved === 'dark',
-    palette,
-    colorSchemeId: currentScheme.id,
-    colorScheme: currentScheme,
-    chartColors,
-  };
+  return useMemo(
+    () => ({
+      theme: resolved,
+      isDark: resolved === 'dark',
+      palette,
+      colorSchemeId: currentScheme.id,
+      colorScheme: currentScheme,
+      chartColors,
+    }),
+    [resolved, palette, currentScheme, chartColors],
+  );
 }

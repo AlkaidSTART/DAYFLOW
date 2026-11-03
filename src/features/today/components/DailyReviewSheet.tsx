@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import React, { useState } from 'react';
 import { Text, View } from 'react-native';
 
@@ -27,6 +27,30 @@ export type DailyReviewSheetProps = {
  * - 可选文字备注
  */
 export function DailyReviewSheet({
+  visible,
+  tasks,
+  focusSessionsCount,
+  focusMinutesTotal,
+  note,
+  onSaveNote,
+  onClose,
+}: DailyReviewSheetProps) {
+  if (!visible) return null;
+  return (
+    <DailyReviewSheetContent
+      key={note}
+      visible={visible}
+      tasks={tasks}
+      focusSessionsCount={focusSessionsCount}
+      focusMinutesTotal={focusMinutesTotal}
+      note={note}
+      onSaveNote={onSaveNote}
+      onClose={onClose}
+    />
+  );
+}
+
+function DailyReviewSheetContent({
   visible,
   tasks,
   focusSessionsCount,

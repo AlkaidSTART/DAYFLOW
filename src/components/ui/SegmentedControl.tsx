@@ -1,6 +1,5 @@
-import { motion } from 'motion/react';
-import React, { useId } from 'react';
-import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import React from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useResolvedTheme } from '@/hooks/use-resolved-theme';
 import { useHaptic } from '@/lib/haptics';
@@ -19,8 +18,8 @@ export type SegmentedControlProps<T extends string> = {
 };
 
 /**
- * Section 6.5 & 6.8: Segmented Control
- * 选中底 surface-selected（支持 motion layoutId 滑动胶囊动效 + 触觉反馈），选中文字 ink，未选中 ink-muted
+ * Section 6.5 & 6.8: Segmented Control (Native 移动端实现)
+ * 选中底 surface-selected（原生即时响应 + 触觉反馈），零冗余外部动效依赖
  */
 export function SegmentedControl<T extends string>({
   options,
@@ -30,7 +29,6 @@ export function SegmentedControl<T extends string>({
 }: SegmentedControlProps<T>) {
   const { palette } = useResolvedTheme();
   const { haptic } = useHaptic();
-  const groupId = useId();
 
   return (
     <View
@@ -56,28 +54,8 @@ export function SegmentedControl<T extends string>({
             accessibilityLabel={opt.label}
             style={[
               styles.segment,
-              Platform.OS !== 'web' && selected
-                ? { backgroundColor: palette.surfaceSelected }
-                : undefined,
+              selected ? { backgroundColor: palette.surfaceSelected } : undefined,
             ]}>
-            {Platform.OS === 'web' && selected ? (
-              <motion.div
-                layoutId={`segment_pill_${groupId}`}
-                transition={{
-                  type: 'spring',
-                  stiffness: 420,
-                  damping: 32,
-                  mass: 0.75,
-                }}
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  borderRadius: RadiusTokens.sm,
-                  backgroundColor: palette.surfaceSelected,
-                }}
-              />
-            ) : null}
-
             <Text
               style={[
                 styles.label,

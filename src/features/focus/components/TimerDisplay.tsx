@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import React, { useEffect } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import Animated, {
@@ -10,6 +10,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { Button } from '@/components/ui/Button';
+import { useFocusStore } from '@/features/focus/store/focus-store';
 import { computeProgressRatio, formatTimerMMSS } from '@/features/focus/timer/timer-machine';
 import { FocusMode, TimerPhase } from '@/features/focus/types';
 import { useResolvedTheme } from '@/hooks/use-resolved-theme';
@@ -18,8 +19,8 @@ import { tabularNumsStyle } from '@/theme/tokens';
 export type TimerDisplayProps = {
   mode: FocusMode;
   phase: TimerPhase;
-  plannedSeconds: number;
-  remainingSeconds: number;
+  plannedSeconds?: number;
+  remainingSeconds?: number;
   completedMinutes: number;
   onRestart: () => void;
   onTapDigits?: () => void;
@@ -28,12 +29,17 @@ export type TimerDisplayProps = {
 export function TimerDisplay({
   mode,
   phase,
-  plannedSeconds,
-  remainingSeconds,
+  plannedSeconds: plannedProp,
+  remainingSeconds: remainingProp,
   completedMinutes,
   onRestart,
   onTapDigits,
 }: TimerDisplayProps) {
+  const storePlanned = useFocusStore((s) => s.plannedSeconds);
+  const storeRemaining = useFocusStore((s) => s.remainingSeconds);
+  const plannedSeconds = plannedProp ?? storePlanned;
+  const remainingSeconds = remainingProp ?? storeRemaining;
+
   const { palette } = useResolvedTheme();
   const isBreak = mode !== 'focus';
   const progressRatio = computeProgressRatio(plannedSeconds, remainingSeconds);

@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import * as Linking from 'expo-linking';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -27,7 +27,7 @@ export function UpdatePromptSheet() {
   const hapticEnabled = useSettingsStore((s) => s.hapticEnabled);
   const showSnackbar = useSettingsStore((s) => s.showSnackbar);
 
-  if (!remoteInfo) return null;
+  if (!remoteInfo || !visible) return null;
 
   const targetUrl =
     remoteInfo.apkDownloadUrl || remoteInfo.releaseUrl || APP_VERSION_CONFIG.releasesUrl;

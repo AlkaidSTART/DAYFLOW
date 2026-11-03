@@ -25,8 +25,6 @@ import { tabularNumsStyle } from '@/theme/tokens';
 export default function FocusScreen() {
   const mode = useFocusStore((s) => s.mode);
   const phase = useFocusStore((s) => s.phase);
-  const plannedSeconds = useFocusStore((s) => s.plannedSeconds);
-  const remainingSeconds = useFocusStore((s) => s.remainingSeconds);
   const lastCompletedMinutes = useFocusStore((s) => s.lastCompletedMinutes);
   const linkedTaskId = useFocusStore((s) => s.linkedTaskId);
   const sessions = useFocusStore((s) => s.sessions);
@@ -183,8 +181,6 @@ export default function FocusScreen() {
             <TimerDisplay
               mode={mode}
               phase={phase}
-              plannedSeconds={plannedSeconds}
-              remainingSeconds={remainingSeconds}
               completedMinutes={lastCompletedMinutes}
               onRestart={() => {
                 triggerHaptic('start', hapticEnabled);

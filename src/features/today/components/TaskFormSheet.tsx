@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import React, { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
@@ -79,7 +79,7 @@ function assembleSubtitle(
   return category || timePart;
 }
 
-export function TaskFormSheet({
+function TaskFormSheetContent({
   visible,
   editingTask,
   defaultIsTop3,
@@ -91,50 +91,21 @@ export function TaskFormSheet({
   const { palette } = useResolvedTheme();
   const { haptic } = useHaptic();
 
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [isTop3, setIsTop3] = useState(defaultIsTop3);
+  const parsedInitial = editingTask ? parseInitialSubtitle(editingTask.subtitle) : null;
+
+  const [title, setTitle] = useState(editingTask?.title ?? '');
+  const [description, setDescription] = useState(editingTask?.description ?? '');
+  const [isTop3, setIsTop3] = useState(editingTask?.isTop3 ?? defaultIsTop3);
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   // 分类与滚动时间选择状态
-  const [selectedCategory, setSelectedCategory] = useState('');
-  const [selectedDate, setSelectedDate] = useState<'今天' | '明天'>('今天');
-  const [selectedHour, setSelectedHour] = useState('00');
-  const [selectedMinute, setSelectedMinute] = useState('00');
-  const [hasTime, setHasTime] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(parsedInitial?.category ?? '');
+  const [selectedDate, setSelectedDate] = useState<'今天' | '明天'>(parsedInitial?.date ?? '今天');
+  const [selectedHour, setSelectedHour] = useState(parsedInitial?.hour ?? '00');
+  const [selectedMinute, setSelectedMinute] = useState(parsedInitial?.minute ?? '00');
+  const [hasTime, setHasTime] = useState(parsedInitial?.hasTime ?? false);
   const [customSubtitle, setCustomSubtitle] = useState<string | null>(null);
-
-  // 初始化或切换编辑任务时同步表单数据
-  useEffect(() => {
-    if (visible) {
-      if (editingTask) {
-        setTitle(editingTask.title);
-        setDescription(editingTask.description ?? '');
-        setIsTop3(editingTask.isTop3);
-
-        const parsed = parseInitialSubtitle(editingTask.subtitle);
-        setSelectedCategory(parsed.category);
-        setSelectedDate(parsed.date);
-        setSelectedHour(parsed.hour);
-        setSelectedMinute(parsed.minute);
-        setHasTime(parsed.hasTime);
-        setCustomSubtitle(null);
-      } else {
-        setTitle('');
-        setDescription('');
-        setIsTop3(defaultIsTop3);
-        setSelectedCategory('');
-        setSelectedDate('今天');
-        setSelectedHour('00');
-        setSelectedMinute('00');
-        setHasTime(false);
-        setCustomSubtitle(null);
-      }
-      setError(null);
-      setConfirmDelete(false);
-    }
-  }, [visible, editingTask, defaultIsTop3]);
 
   const otherTop3Count = editingTask?.isTop3 ? currentTop3Count - 1 : currentTop3Count;
   const top3Full = otherTop3Count >= 3;
@@ -374,4 +345,9 @@ export function TaskFormSheet({
       </View>
     </Sheet>
   );
+}
+
+export function TaskFormSheet(props: TaskFormSheetProps) {
+  if (!props.visible) return null;
+  return <TaskFormSheetContent key={props.editingTask?.id ?? 'create'} {...props} />;
 }

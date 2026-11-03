@@ -1,4 +1,4 @@
-import { Ionicons } from '@expo/vector-icons';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -28,7 +28,16 @@ export type BillFormSheetProps = {
   onDelete?: (bill: Bill) => void;
 };
 
-export function BillFormSheet({
+function parseBillInitialDatePreset(occurredAt?: number): DatePreset {
+  if (!occurredAt) return 'today';
+  const billDay = dayjs(occurredAt).startOf('day');
+  const today = dayjs().startOf('day');
+  if (billDay.isSame(today)) return 'today';
+  if (billDay.isSame(today.subtract(1, 'day'))) return 'yesterday';
+  return 'twoDaysAgo';
+}
+
+function BillFormSheetContent({
   visible,
   editingBill,
   categories,
@@ -38,46 +47,20 @@ export function BillFormSheet({
 }: BillFormSheetProps) {
   const { palette } = useResolvedTheme();
 
-  const [type, setType] = useState<BillType>('expense');
-  const [amountInput, setAmountInput] = useState('');
-  const [categoryId, setCategoryId] = useState('cat_exp_food');
-  const [note, setNote] = useState('');
-  const [datePreset, setDatePreset] = useState<DatePreset>('today');
+  const [type, setType] = useState<BillType>(editingBill?.type ?? 'expense');
+  const [amountInput, setAmountInput] = useState(
+    editingBill ? formatCentsNumber(editingBill.amountCents).replace(/,/g, '') : '',
+  );
+  const [categoryId, setCategoryId] = useState(editingBill?.categoryId ?? 'cat_exp_food');
+  const [note, setNote] = useState(editingBill?.note ?? '');
+  const [datePreset, setDatePreset] = useState<DatePreset>(
+    parseBillInitialDatePreset(editingBill?.occurredAt),
+  );
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   const filteredCategories = categories.filter((c) => c.type === type);
-
-  useEffect(() => {
-    if (visible) {
-      if (editingBill) {
-        setType(editingBill.type);
-        setAmountInput(formatCentsNumber(editingBill.amountCents).replace(/,/g, ''));
-        setCategoryId(editingBill.categoryId);
-        setNote(editingBill.note);
-
-        const billDay = dayjs(editingBill.occurredAt).startOf('day');
-        const today = dayjs().startOf('day');
-        if (billDay.isSame(today)) {
-          setDatePreset('today');
-        } else if (billDay.isSame(today.subtract(1, 'day'))) {
-          setDatePreset('yesterday');
-        } else {
-          setDatePreset('twoDaysAgo');
-        }
-      } else {
-        setType('expense');
-        setAmountInput('');
-        setCategoryId('cat_exp_food');
-        setNote('');
-        setDatePreset('today');
-      }
-      setError(null);
-      setSubmitting(false);
-      setConfirmDelete(false);
-    }
-  }, [visible, editingBill]);
 
   const handleChangeType = (nextType: BillType) => {
     setType(nextType);
@@ -258,4 +241,9 @@ export function BillFormSheet({
       </View>
     </Sheet>
   );
+}
+
+export function BillFormSheet(props: BillFormSheetProps) {
+  if (!props.visible) return null;
+  return <BillFormSheetContent key={props.editingBill?.id ?? 'create'} {...props} />;
 }

@@ -16,25 +16,18 @@ export type BudgetFormSheetProps = {
 
 const BUDGET_PRESETS_YUAN = [1000, 1280, 1500, 2000];
 
-export function BudgetFormSheet({
+function BudgetFormSheetContent({
   visible,
   currentBudgetCents,
   onClose,
   onSaveBudget,
 }: BudgetFormSheetProps) {
-  const [input, setInput] = useState('');
+  const [input, setInput] = useState(
+    currentBudgetCents > 0
+      ? formatCentsNumber(currentBudgetCents).replace(/,/g, '')
+      : '',
+  );
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (visible) {
-      setInput(
-        currentBudgetCents > 0
-          ? formatCentsNumber(currentBudgetCents).replace(/,/g, '')
-          : '',
-      );
-      setError(null);
-    }
-  }, [visible, currentBudgetCents]);
 
   const handleSave = () => {
     const cents = parseAmountToCents(input);
@@ -119,4 +112,9 @@ export function BudgetFormSheet({
       </View>
     </Sheet>
   );
+}
+
+export function BudgetFormSheet(props: BudgetFormSheetProps) {
+  if (!props.visible) return null;
+  return <BudgetFormSheetContent key={props.currentBudgetCents} {...props} />;
 }
