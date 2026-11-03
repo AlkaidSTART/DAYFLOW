@@ -10,7 +10,7 @@ if (!fs.existsSync(gradlePath)) {
 
 let gradle = fs.readFileSync(gradlePath, 'utf8');
 
-if (gradle.includes('signingConfigs.release')) {
+if (gradle.includes('signingConfig signingConfigs.release')) {
   console.log('Release signing is already configured.');
   process.exit(0);
 }
@@ -32,13 +32,20 @@ const releaseSigningConfig = `
 
 gradle = gradle.replace(signingConfigsBlock, (match) => match + releaseSigningConfig);
 
-const releaseBuildType = /release\s*\{\s*signingConfig signingConfigs\.debug/;
-if (!releaseBuildType.test(gradle)) {
+const buildTypesIndex = gradle.indexOf('buildTypes {');
+const releaseIndex = buildTypesIndex === -1 ? -1 : gradle.indexOf('release {', buildTypesIndex);
+const debugSigning = 'signingConfig signingConfigs.debug';
+const debugSigningIndex = releaseIndex === -1 ? -1 : gradle.indexOf(debugSigning, releaseIndex);
+
+if (buildTypesIndex === -1 || releaseIndex === -1 || debugSigningIndex === -1) {
   console.error('Could not find the release buildType using the debug signing config');
   process.exit(1);
 }
 
-gradle = gradle.replace(releaseBuildType, 'release {\n            signingConfig signingConfigs.release');
+gradle =
+  gradle.slice(0, debugSigningIndex) +
+  'signingConfig signingConfigs.release' +
+  gradle.slice(debugSigningIndex + debugSigning.length);
 
 fs.writeFileSync(gradlePath, gradle);
 console.log('Configured release signing in android/app/build.gradle');
