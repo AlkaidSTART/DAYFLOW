@@ -109,7 +109,7 @@ export const TaskRow = React.memo(function TaskRow({
   const rowContent = (
     <Animated.View
       style={[
-        getCardSurfaceStyle(theme),
+        getCardSurfaceStyle(theme, palette),
         {
           minHeight: 56,
           borderRadius: 20,
@@ -244,10 +244,11 @@ export const TaskRow = React.memo(function TaskRow({
       ) : top3Index ? (
         <View
           accessible={false}
-          className="w-[24px] h-[24px] rounded-sm bg-accent-soft dark:bg-accent-soft-dark items-center justify-center ml-2">
+          style={{ backgroundColor: palette.accentSoft }}
+          className="w-[24px] h-[24px] rounded-sm items-center justify-center ml-2">
           <Text
-            style={tabularNumsStyle}
-            className="text-micro font-semibold text-accent dark:text-accent-dark">
+            style={[tabularNumsStyle, { color: palette.accent }]}
+            className="text-micro font-semibold">
             {top3Index}
           </Text>
         </View>

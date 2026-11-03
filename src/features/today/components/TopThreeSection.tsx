@@ -59,7 +59,9 @@ export function TopThreeSection({
             accessibilityRole="button"
             accessibilityLabel={editMode ? '完成编辑重点任务' : '编辑重点任务'}
             className="min-h-[36px] px-2 items-center justify-center">
-            <Text className="text-caption font-semibold text-accent dark:text-accent-dark">
+            <Text
+              style={{ color: palette.accent }}
+              className="text-caption font-semibold">
               {editMode ? '完成' : '编辑'}
             </Text>
           </Pressable>

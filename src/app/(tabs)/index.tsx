@@ -282,7 +282,9 @@ export default function TodayScreen() {
                       accessibilityRole="button"
                       accessibilityLabel={editMode ? '完成排序' : '排序或管理任务'}
                       className="min-h-[36px] px-2 items-center justify-center">
-                      <Text className="text-caption font-semibold text-accent dark:text-accent-dark">
+                      <Text
+                        style={{ color: palette.accent }}
+                        className="text-caption font-semibold">
                         {editMode ? '完成' : '管理'}
                       </Text>
                     </Pressable>

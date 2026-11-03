@@ -279,14 +279,14 @@ export default function SettingsScreen() {
             <Text className="text-caption font-semibold text-ink-muted dark:text-ink-muted-dark mb-3">
               2. 专注
             </Text>
-            <View style={getCardSurfaceStyle(theme)} className="rounded-lg p-4 gap-5">
+            <View style={getCardSurfaceStyle(theme, palette)} className="rounded-lg p-4 gap-5">
               {/* 专注时长 */}
               <View>
                 <View className="flex-row items-center justify-between mb-2">
                   <Text className="text-body text-ink dark:text-ink-dark">专注时长</Text>
                   <Text
-                    style={tabularNumsStyle}
-                    className="text-caption font-semibold text-accent dark:text-accent-dark">
+                    style={[tabularNumsStyle, { color: palette.accent }]}
+                    className="text-caption font-semibold">
                     {focusMinutes} 分钟
                   </Text>
                 </View>
@@ -299,18 +299,23 @@ export default function SettingsScreen() {
                         onPress={() => setFocusDuration('focusMinutes', m)}
                         accessibilityRole="radio"
                         accessibilityState={{ checked: active }}
-                        className={`flex-1 min-h-[40px] rounded-md items-center justify-center ${
-                          active
-                            ? 'bg-accent-soft dark:bg-accent-soft-dark'
-                            : 'bg-surface-muted dark:bg-surface-muted-dark'
-                        }`}>
+                        style={[
+                          {
+                            backgroundColor: active
+                              ? palette.accentSoft
+                              : palette.surfaceMuted,
+                          },
+                        ]}
+                        className="flex-1 min-h-[40px] rounded-md items-center justify-center">
                         <Text
-                          style={tabularNumsStyle}
-                          className={`text-caption ${
-                            active
-                              ? 'text-accent dark:text-accent-dark font-semibold'
-                              : 'text-ink-muted dark:text-ink-muted-dark'
-                          }`}>
+                          style={[
+                            tabularNumsStyle,
+                            {
+                              color: active ? palette.accent : palette.inkMuted,
+                              fontWeight: active ? '600' : '400',
+                            },
+                          ]}
+                          className="text-caption">
                           {m} 分钟
                         </Text>
                       </Pressable>
@@ -324,8 +329,8 @@ export default function SettingsScreen() {
                 <View className="flex-row items-center justify-between mb-2">
                   <Text className="text-body text-ink dark:text-ink-dark">短休息</Text>
                   <Text
-                    style={tabularNumsStyle}
-                    className="text-caption font-semibold text-accent dark:text-accent-dark">
+                    style={[tabularNumsStyle, { color: palette.accent }]}
+                    className="text-caption font-semibold">
                     {shortBreakMinutes} 分钟
                   </Text>
                 </View>
@@ -338,18 +343,23 @@ export default function SettingsScreen() {
                         onPress={() => setFocusDuration('shortBreakMinutes', m)}
                         accessibilityRole="radio"
                         accessibilityState={{ checked: active }}
-                        className={`flex-1 min-h-[40px] rounded-md items-center justify-center ${
-                          active
-                            ? 'bg-accent-soft dark:bg-accent-soft-dark'
-                            : 'bg-surface-muted dark:bg-surface-muted-dark'
-                        }`}>
+                        style={[
+                          {
+                            backgroundColor: active
+                              ? palette.accentSoft
+                              : palette.surfaceMuted,
+                          },
+                        ]}
+                        className="flex-1 min-h-[40px] rounded-md items-center justify-center">
                         <Text
-                          style={tabularNumsStyle}
-                          className={`text-caption ${
-                            active
-                              ? 'text-accent dark:text-accent-dark font-semibold'
-                              : 'text-ink-muted dark:text-ink-muted-dark'
-                          }`}>
+                          style={[
+                            tabularNumsStyle,
+                            {
+                              color: active ? palette.accent : palette.inkMuted,
+                              fontWeight: active ? '600' : '400',
+                            },
+                          ]}
+                          className="text-caption">
                           {m} 分钟
                         </Text>
                       </Pressable>
@@ -363,8 +373,8 @@ export default function SettingsScreen() {
                 <View className="flex-row items-center justify-between mb-2">
                   <Text className="text-body text-ink dark:text-ink-dark">长休息</Text>
                   <Text
-                    style={tabularNumsStyle}
-                    className="text-caption font-semibold text-accent dark:text-accent-dark">
+                    style={[tabularNumsStyle, { color: palette.accent }]}
+                    className="text-caption font-semibold">
                     {longBreakMinutes} 分钟
                   </Text>
                 </View>
@@ -377,18 +387,23 @@ export default function SettingsScreen() {
                         onPress={() => setFocusDuration('longBreakMinutes', m)}
                         accessibilityRole="radio"
                         accessibilityState={{ checked: active }}
-                        className={`flex-1 min-h-[40px] rounded-md items-center justify-center ${
-                          active
-                            ? 'bg-accent-soft dark:bg-accent-soft-dark'
-                            : 'bg-surface-muted dark:bg-surface-muted-dark'
-                        }`}>
+                        style={[
+                          {
+                            backgroundColor: active
+                              ? palette.accentSoft
+                              : palette.surfaceMuted,
+                          },
+                        ]}
+                        className="flex-1 min-h-[40px] rounded-md items-center justify-center">
                         <Text
-                          style={tabularNumsStyle}
-                          className={`text-caption ${
-                            active
-                              ? 'text-accent dark:text-accent-dark font-semibold'
-                              : 'text-ink-muted dark:text-ink-muted-dark'
-                          }`}>
+                          style={[
+                            tabularNumsStyle,
+                            {
+                              color: active ? palette.accent : palette.inkMuted,
+                              fontWeight: active ? '600' : '400',
+                            },
+                          ]}
+                          className="text-caption">
                           {m} 分钟
                         </Text>
                       </Pressable>
@@ -423,7 +438,7 @@ export default function SettingsScreen() {
             <Text className="text-caption font-semibold text-ink-muted dark:text-ink-muted-dark mb-3">
               3. 反馈
             </Text>
-            <View style={getCardSurfaceStyle(theme)} className="rounded-lg p-4 gap-4">
+            <View style={getCardSurfaceStyle(theme, palette)} className="rounded-lg p-4 gap-4">
               <View className="flex-row items-center justify-between min-h-[48px]">
                 <View className="flex-1 mr-4">
                   <Text className="text-body text-ink dark:text-ink-dark">触觉反馈</Text>
@@ -468,15 +483,15 @@ export default function SettingsScreen() {
             <Text className="text-caption font-semibold text-ink-muted dark:text-ink-muted-dark mb-3">
               4. 财务
             </Text>
-            <View style={getCardSurfaceStyle(theme)} className="rounded-lg p-4 gap-4">
+            <View style={getCardSurfaceStyle(theme, palette)} className="rounded-lg p-4 gap-4">
               <View>
                 <View className="flex-row items-center justify-between mb-2">
                   <Text className="text-body text-ink dark:text-ink-dark">
                     预算提醒阈值
                   </Text>
                   <Text
-                    style={tabularNumsStyle}
-                    className="text-caption font-semibold text-accent dark:text-accent-dark">
+                    style={[tabularNumsStyle, { color: palette.accent }]}
+                    className="text-caption font-semibold">
                     {budgetThresholdPercent}%
                   </Text>
                 </View>
@@ -489,18 +504,23 @@ export default function SettingsScreen() {
                         onPress={() => setBudgetThresholdPercent(pct)}
                         accessibilityRole="radio"
                         accessibilityState={{ checked: active }}
-                        className={`flex-1 min-h-[40px] rounded-md items-center justify-center ${
-                          active
-                            ? 'bg-accent-soft dark:bg-accent-soft-dark'
-                            : 'bg-surface-muted dark:bg-surface-muted-dark'
-                        }`}>
+                        style={[
+                          {
+                            backgroundColor: active
+                              ? palette.accentSoft
+                              : palette.surfaceMuted,
+                          },
+                        ]}
+                        className="flex-1 min-h-[40px] rounded-md items-center justify-center">
                         <Text
-                          style={tabularNumsStyle}
-                          className={`text-caption ${
-                            active
-                              ? 'text-accent dark:text-accent-dark font-semibold'
-                              : 'text-ink-muted dark:text-ink-muted-dark'
-                          }`}>
+                          style={[
+                            tabularNumsStyle,
+                            {
+                              color: active ? palette.accent : palette.inkMuted,
+                              fontWeight: active ? '600' : '400',
+                            },
+                          ]}
+                          className="text-caption">
                           {pct}%
                         </Text>
                       </Pressable>
@@ -525,7 +545,7 @@ export default function SettingsScreen() {
             <Text className="text-caption font-semibold text-ink-muted dark:text-ink-muted-dark mb-3">
               5. 数据
             </Text>
-            <View style={getCardSurfaceStyle(theme)} className="rounded-lg p-4 gap-3">
+            <View style={getCardSurfaceStyle(theme, palette)} className="rounded-lg p-4 gap-3">
               <Pressable
                 onPress={handleExportBackup}
                 accessibilityRole="button"
@@ -580,7 +600,7 @@ export default function SettingsScreen() {
             <Text className="text-caption font-semibold text-ink-muted dark:text-ink-muted-dark mb-3">
               6. 关于
             </Text>
-            <View style={getCardSurfaceStyle(theme)} className="rounded-lg p-4 gap-3">
+            <View style={getCardSurfaceStyle(theme, palette)} className="rounded-lg p-4 gap-3">
               <View className="min-h-[40px] flex-row items-center justify-between">
                 <Text className="text-body text-ink dark:text-ink-dark">当前版本</Text>
                 <Text
@@ -613,14 +633,16 @@ export default function SettingsScreen() {
                       检查中...
                     </Text>
                   ) : isOutdated && remoteInfo ? (
-                    <View className="px-2.5 py-1 rounded-sm bg-accent-soft dark:bg-accent-soft-dark mr-1.5 flex-row items-center">
+                    <View
+                      style={{ backgroundColor: palette.accentSoft }}
+                      className="px-2.5 py-1 rounded-sm mr-1.5 flex-row items-center">
                       <View
                         style={{ backgroundColor: palette.accent }}
                         className="w-1.5 h-1.5 rounded-full mr-1.5"
                       />
                       <Text
-                        style={tabularNumsStyle}
-                        className="text-caption font-semibold text-accent dark:text-accent-dark">
+                        style={[tabularNumsStyle, { color: palette.accent }]}
+                        className="text-caption font-semibold">
                         新版本 {formatVersionTag(remoteInfo.version)}
                       </Text>
                     </View>

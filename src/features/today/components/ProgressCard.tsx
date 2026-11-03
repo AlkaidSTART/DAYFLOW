@@ -59,13 +59,15 @@ export function ProgressCard({
           accessibilityRole="button"
           accessibilityLabel="打开每日复盘"
           className="min-h-[36px] px-2 items-center justify-center">
-          <Text className="text-caption font-semibold text-accent dark:text-accent-dark">
+          <Text
+            style={{ color: palette.accent }}
+            className="text-caption font-semibold">
             每日复盘
           </Text>
         </Pressable>
       </View>
 
-      <View style={getCardSurfaceStyle(theme)} className="rounded-lg p-4">
+      <View style={getCardSurfaceStyle(theme, palette)} className="rounded-lg p-4">
         {progress.totalCount === 0 ? (
           <View className="py-2">
             <Text className="text-body text-ink-muted dark:text-ink-muted-dark mb-4">
@@ -98,8 +100,8 @@ export function ProgressCard({
                 已完成 {progress.completedCount} / {progress.totalCount}
               </Text>
               <Text
-                style={tabularNumsStyle}
-                className="text-caption font-semibold text-accent dark:text-accent-dark">
+                style={[tabularNumsStyle, { color: palette.accent }]}
+                className="text-caption font-semibold">
                 {progress.percentage}%
               </Text>
             </View>
@@ -139,7 +141,9 @@ export function ProgressCard({
           </View>
 
           <View className="flex-row items-center py-1">
-            <Text className="text-caption font-semibold text-accent dark:text-accent-dark mr-1">
+            <Text
+              style={{ color: palette.accent }}
+              className="text-caption font-semibold mr-1">
               查看专注
             </Text>
             <Ionicons name="arrow-forward-outline" size={14} color={palette.accent} />

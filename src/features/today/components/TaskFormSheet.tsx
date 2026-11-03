@@ -5,8 +5,10 @@ import { Pressable, Text, View } from 'react-native';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Sheet } from '@/components/ui/Sheet';
+import { ScrollTimePicker } from '@/features/today/components/ScrollTimePicker';
 import { Task, TaskDraft } from '@/features/today/types';
 import { useResolvedTheme } from '@/hooks/use-resolved-theme';
+import { useHaptic } from '@/lib/haptics';
 
 export type TaskFormSheetProps = {
   visible: boolean;
@@ -18,7 +20,64 @@ export type TaskFormSheetProps = {
   onDelete?: (task: Task) => void;
 };
 
-const QUICK_TAGS = ['学习 · 今天 14:00', '学习 · 图书馆', '运动 · 傍晚', '生活 · 今天'];
+const CATEGORY_TAGS = ['学习', '工作', '运动', '生活'];
+
+function parseInitialSubtitle(sub?: string) {
+  if (!sub) {
+    return {
+      category: '',
+      date: '今天' as const,
+      hour: '14',
+      minute: '00',
+      hasTime: false,
+    };
+  }
+
+  let category = '';
+  let date: '今天' | '明天' = '今天';
+  let hour = '14';
+  let minute = '00';
+  let hasTime = false;
+
+  const parts = sub.split('·').map((s) => s.trim());
+  let timeSearchTarget = sub;
+
+  if (parts.length >= 2 && CATEGORY_TAGS.includes(parts[0])) {
+    category = parts[0];
+    timeSearchTarget = parts.slice(1).join('·');
+  } else if (CATEGORY_TAGS.includes(parts[0])) {
+    category = parts[0];
+    timeSearchTarget = '';
+  }
+
+  const timeMatch = timeSearchTarget.match(/(今天|明天)?\s*(\d{1,2}):(\d{2})/);
+  if (timeMatch) {
+    hasTime = true;
+    if (timeMatch[1] === '明天') date = '明天';
+    hour = timeMatch[2].padStart(2, '0');
+    const rawMin = parseInt(timeMatch[3], 10);
+    const roundedMin = Math.min(55, Math.max(0, Math.round(rawMin / 5) * 5));
+    minute = roundedMin.toString().padStart(2, '0');
+  }
+
+  return { category, date, hour, minute, hasTime };
+}
+
+function assembleSubtitle(
+  category: string,
+  hasTime: boolean,
+  date: '今天' | '明天',
+  hour: string,
+  minute: string,
+  manualSubtitle?: string,
+): string {
+  if (manualSubtitle !== undefined) return manualSubtitle;
+  const timePart = hasTime ? `${date} ${hour}:${minute}` : '';
+  if (category && timePart) {
+    return `${category} · ${timePart}`;
+  }
+  return category || timePart;
+}
 
 export function TaskFormSheet({
   visible,
@@ -30,26 +89,47 @@ export function TaskFormSheet({
   onDelete,
 }: TaskFormSheetProps) {
   const { palette } = useResolvedTheme();
+  const { haptic } = useHaptic();
 
   const [title, setTitle] = useState('');
-  const [subtitle, setSubtitle] = useState('');
   const [description, setDescription] = useState('');
   const [isTop3, setIsTop3] = useState(defaultIsTop3);
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
+  // 分类与滚动时间选择状态
+  const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedDate, setSelectedDate] = useState<'今天' | '明天'>('今天');
+  const [selectedHour, setSelectedHour] = useState('14');
+  const [selectedMinute, setSelectedMinute] = useState('00');
+  const [hasTime, setHasTime] = useState(false);
+  const [customSubtitle, setCustomSubtitle] = useState<string | null>(null);
+
+  // 初始化或切换编辑任务时同步表单数据
   useEffect(() => {
     if (visible) {
       if (editingTask) {
         setTitle(editingTask.title);
-        setSubtitle(editingTask.subtitle ?? '');
         setDescription(editingTask.description ?? '');
         setIsTop3(editingTask.isTop3);
+
+        const parsed = parseInitialSubtitle(editingTask.subtitle);
+        setSelectedCategory(parsed.category);
+        setSelectedDate(parsed.date);
+        setSelectedHour(parsed.hour);
+        setSelectedMinute(parsed.minute);
+        setHasTime(parsed.hasTime);
+        setCustomSubtitle(null);
       } else {
         setTitle('');
-        setSubtitle('');
         setDescription('');
         setIsTop3(defaultIsTop3);
+        setSelectedCategory('');
+        setSelectedDate('今天');
+        setSelectedHour('14');
+        setSelectedMinute('00');
+        setHasTime(false);
+        setCustomSubtitle(null);
       }
       setError(null);
       setConfirmDelete(false);
@@ -59,19 +139,37 @@ export function TaskFormSheet({
   const otherTop3Count = editingTask?.isTop3 ? currentTop3Count - 1 : currentTop3Count;
   const top3Full = otherTop3Count >= 3;
 
+  const currentSubtitle =
+    customSubtitle !== null
+      ? customSubtitle
+      : assembleSubtitle(
+          selectedCategory,
+          hasTime,
+          selectedDate,
+          selectedHour,
+          selectedMinute,
+        );
+
   const handleToggleTop3 = () => {
     if (!isTop3 && top3Full) {
       setError('每日 Top 3 最多 3 条，请先取消一条重点任务');
       return;
     }
     setError(null);
+    haptic('selection');
     setIsTop3(!isTop3);
+  };
+
+  const handleSelectCategory = (cat: string) => {
+    haptic('selection');
+    setCustomSubtitle(null);
+    setSelectedCategory((prev) => (prev === cat ? '' : cat));
   };
 
   const handleSubmit = () => {
     const res = onSave({
       title,
-      subtitle,
+      subtitle: currentSubtitle,
       description,
       isTop3,
     });
@@ -100,26 +198,74 @@ export function TaskFormSheet({
           autoFocus={!editingTask}
         />
 
+        {/* 分类快捷选择 */}
         <View>
-          <Input
-            label="分类与时间提示（可选）"
-            placeholder="例如：学习 · 今天 14:00"
-            value={subtitle}
-            onChangeText={setSubtitle}
-          />
-          <View className="flex-row flex-wrap gap-2 mt-2">
-            {QUICK_TAGS.map((tag) => (
-              <Pressable
-                key={tag}
-                onPress={() => setSubtitle(tag)}
-                accessibilityRole="button"
-                accessibilityLabel={`使用快捷标签 ${tag}`}
-                className="px-2.5 py-1 rounded-sm bg-surface-muted dark:bg-surface-muted-dark">
-                <Text className="text-micro text-ink-muted dark:text-ink-muted-dark">{tag}</Text>
-              </Pressable>
-            ))}
+          <Text className="text-caption font-semibold text-ink dark:text-ink-dark mb-2">
+            任务分类（可选）
+          </Text>
+          <View className="flex-row gap-2">
+            {CATEGORY_TAGS.map((tag) => {
+              const isSelected = selectedCategory === tag;
+              return (
+                <Pressable
+                  key={tag}
+                  onPress={() => handleSelectCategory(tag)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`选择分类 ${tag}`}
+                  className={`px-3 py-1.5 rounded-sm border ${
+                    isSelected
+                      ? 'bg-accent-soft dark:bg-accent-soft-dark border-accent dark:border-accent-dark'
+                      : 'bg-surface-muted dark:bg-surface-muted-dark border-transparent'
+                  }`}>
+                  <Text
+                    className={`text-micro ${
+                      isSelected
+                        ? 'font-semibold text-accent dark:text-accent-dark'
+                        : 'text-ink-muted dark:text-ink-muted-dark'
+                    }`}>
+                    {tag}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
         </View>
+
+        {/* 滚动时间选择列表（带震动反馈） */}
+        <View>
+          <Text className="text-caption font-semibold text-ink dark:text-ink-dark mb-2">
+            时间设定（可选）
+          </Text>
+          <ScrollTimePicker
+            selectedDate={selectedDate}
+            onChangeDate={(d) => {
+              setCustomSubtitle(null);
+              setSelectedDate(d);
+            }}
+            selectedHour={selectedHour}
+            selectedMinute={selectedMinute}
+            onChangeTime={(h, m) => {
+              setCustomSubtitle(null);
+              setSelectedHour(h);
+              setSelectedMinute(m);
+            }}
+            hasTime={hasTime}
+            onToggleHasTime={(ht) => {
+              setCustomSubtitle(null);
+              setHasTime(ht);
+            }}
+          />
+        </View>
+
+        {/* 预览副标题 */}
+        {currentSubtitle ? (
+          <View className="flex-row items-center px-3 py-2 rounded-md bg-surface-muted dark:bg-surface-muted-dark">
+            <Ionicons name="information-circle-outline" size={16} color={palette.inkMuted} style={{ marginRight: 6 }} />
+            <Text className="text-micro text-ink-muted dark:text-ink-muted-dark">
+              提示行预览：{currentSubtitle}
+            </Text>
+          </View>
+        ) : null}
 
         <Input
           label="备注说明（可选）"
