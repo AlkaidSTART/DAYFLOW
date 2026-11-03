@@ -4,73 +4,6 @@ import { Task, TaskDraft } from '@/features/today/types';
 import { getTodayLocalDate } from '@/lib/date';
 import { createId } from '@/lib/id';
 
-function createInitialTasks(): Task[] {
-  const today = getTodayLocalDate();
-  const now = Date.now();
-  return [
-    {
-      id: 'task_top_1',
-      title: '写实验报告',
-      subtitle: '学习 · 今天 14:00',
-      description: '整理物理实验数据与误差分析章节',
-      date: today,
-      isTop3: true,
-      sortOrder: 1,
-      completedAt: null,
-      createdAt: now - 3600_000 * 3,
-      updatedAt: now - 3600_000 * 3,
-    },
-    {
-      id: 'task_top_2',
-      title: '复习线性代数',
-      subtitle: '学习 · 特征值与二次型',
-      description: '完成课后习题第 4 章',
-      date: today,
-      isTop3: true,
-      sortOrder: 2,
-      completedAt: null,
-      createdAt: now - 3600_000 * 2,
-      updatedAt: now - 3600_000 * 2,
-    },
-    {
-      id: 'task_top_3',
-      title: '跑步 3 公里',
-      subtitle: '运动 · 操场夜跑',
-      description: '',
-      date: today,
-      isTop3: true,
-      sortOrder: 3,
-      completedAt: now - 1800_000,
-      createdAt: now - 3600_000 * 4,
-      updatedAt: now - 1800_000,
-    },
-    {
-      id: 'task_other_1',
-      title: '取快递',
-      subtitle: '生活 · 菜鸟驿站',
-      description: '',
-      date: today,
-      isTop3: false,
-      sortOrder: 4,
-      completedAt: null,
-      createdAt: now - 3600_000,
-      updatedAt: now - 3600_000,
-    },
-    {
-      id: 'task_other_2',
-      title: '回复导师邮件',
-      subtitle: '学习 · 确认周四组会时间',
-      description: '',
-      date: today,
-      isTop3: false,
-      sortOrder: 5,
-      completedAt: null,
-      createdAt: now - 1200_000,
-      updatedAt: now - 1200_000,
-    },
-  ];
-}
-
 export type TodayState = {
   tasks: Task[];
   dailyReviewNote: string;
@@ -86,12 +19,11 @@ export type TodayState = {
   moveTaskOrder: (id: string, direction: 'up' | 'down') => void;
   setDailyReviewNote: (note: string) => void;
   clearAllTasks: () => void;
-  resetSampleTasks: () => void;
 };
 
 export const useTodayStore = create<TodayState>((set, get) => ({
-  tasks: createInitialTasks(),
-  dailyReviewNote: '上午状态不错，先把实验报告的图表整理完了。',
+  tasks: [],
+  dailyReviewNote: '',
 
   addTask: (draft) => {
     const title = draft.title.trim();
@@ -211,5 +143,4 @@ export const useTodayStore = create<TodayState>((set, get) => ({
 
   setDailyReviewNote: (dailyReviewNote) => set({ dailyReviewNote }),
   clearAllTasks: () => set({ tasks: [] }),
-  resetSampleTasks: () => set({ tasks: createInitialTasks() }),
 }));

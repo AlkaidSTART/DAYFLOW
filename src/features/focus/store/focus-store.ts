@@ -4,23 +4,6 @@ import { FocusMode, FocusSession, TimerPhase } from '@/features/focus/types';
 import { computeRemainingSeconds } from '@/features/focus/timer/timer-machine';
 import { createId } from '@/lib/id';
 
-function createInitialSessions(): FocusSession[] {
-  const now = Date.now();
-  return [
-    {
-      id: 'session_init_1',
-      taskId: 'task_top_1',
-      taskTitleSnapshot: '写实验报告',
-      mode: 'focus',
-      plannedSeconds: 25 * 60,
-      actualSeconds: 25 * 60,
-      startedAt: now - 3600_000 * 2,
-      endedAt: now - 3600_000 * 2 + 25 * 60 * 1000,
-      status: 'completed',
-    },
-  ];
-}
-
 export type FocusState = {
   mode: FocusMode;
   phase: TimerPhase;
@@ -43,7 +26,6 @@ export type FocusState = {
   finishEarly: (recordSession: boolean, taskTitle?: string, now?: number) => void;
   resetAfterComplete: (durationMinutes: number) => void;
   clearSessions: () => void;
-  resetSampleSessions: () => void;
 };
 
 export const useFocusStore = create<FocusState>((set, get) => ({
@@ -55,8 +37,8 @@ export const useFocusStore = create<FocusState>((set, get) => ({
   targetEndAt: null,
   accumulatedSeconds: 0,
   lastCompletedMinutes: 25,
-  linkedTaskId: 'task_top_1',
-  sessions: createInitialSessions(),
+  linkedTaskId: null,
+  sessions: [],
 
   setLinkedTaskId: (linkedTaskId) => set({ linkedTaskId }),
 
@@ -218,5 +200,4 @@ export const useFocusStore = create<FocusState>((set, get) => ({
   },
 
   clearSessions: () => set({ sessions: [] }),
-  resetSampleSessions: () => set({ sessions: createInitialSessions() }),
 }));

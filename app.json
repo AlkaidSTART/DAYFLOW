@@ -8,7 +8,7 @@
     "scheme": "dayflow",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon",
+      "icon": "./assets/images/icon.png",
       "bundleIdentifier": "com.alkaidstart.dayflow"
     },
     "android": {

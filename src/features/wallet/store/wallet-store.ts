@@ -1,4 +1,3 @@
-import dayjs from 'dayjs';
 import { create } from 'zustand';
 
 import { Bill, BillDraft, Category } from '@/features/wallet/types';
@@ -112,77 +111,6 @@ export const DEFAULT_CATEGORIES: Category[] = [
   },
 ];
 
-function createInitialBills(): Bill[] {
-  const todayNoon = dayjs().hour(12).minute(30).second(0).valueOf();
-  const yesterdayEve = dayjs().subtract(1, 'day').hour(19).minute(10).second(0).valueOf();
-  const twoDaysAgo = dayjs().subtract(2, 'day').hour(15).minute(20).second(0).valueOf();
-  const threeDaysAgo = dayjs().subtract(3, 'day').hour(10).minute(0).second(0).valueOf();
-  const monthStart = dayjs().startOf('month').hour(9).minute(0).valueOf();
-
-  return [
-    {
-      id: 'bill_init_1',
-      type: 'expense',
-      amountCents: 1800, // ¥ 18.00
-      categoryId: 'cat_exp_food',
-      note: '食堂午饭',
-      occurredAt: todayNoon,
-      createdAt: todayNoon,
-      updatedAt: todayNoon,
-    },
-    {
-      id: 'bill_init_2',
-      type: 'expense',
-      amountCents: 4650, // ¥ 46.50
-      categoryId: 'cat_exp_daily',
-      note: '超市日用品补货',
-      occurredAt: yesterdayEve,
-      createdAt: yesterdayEve,
-      updatedAt: yesterdayEve,
-    },
-    {
-      id: 'bill_init_3',
-      type: 'expense',
-      amountCents: 22320, // ¥ 223.20
-      categoryId: 'cat_exp_study',
-      note: '专业课教材与复习资料',
-      occurredAt: twoDaysAgo,
-      createdAt: twoDaysAgo,
-      updatedAt: twoDaysAgo,
-    },
-    {
-      id: 'bill_init_4',
-      type: 'expense',
-      amountCents: 32240, // ¥ 322.40
-      categoryId: 'cat_exp_shopping',
-      note: '换季外套',
-      occurredAt: threeDaysAgo,
-      createdAt: threeDaysAgo,
-      updatedAt: threeDaysAgo,
-    },
-    {
-      id: 'bill_init_5',
-      type: 'expense',
-      amountCents: 18390, // 凑齐已用约 62%（共 ¥ 794.00）
-      categoryId: 'cat_exp_food',
-      note: '校园卡餐费充值',
-      occurredAt: threeDaysAgo - 3600_000 * 5,
-      createdAt: threeDaysAgo - 3600_000 * 5,
-      updatedAt: threeDaysAgo - 3600_000 * 5,
-    },
-    {
-      id: 'bill_init_6',
-      type: 'income',
-      amountCents: 200000, // +¥ 2,000.00
-      categoryId: 'cat_inc_allowance',
-      note: '本月生活费',
-      occurredAt: monthStart,
-      createdAt: monthStart,
-      updatedAt: monthStart,
-    },
-  ];
-}
-
 export type WalletState = {
   selectedMonth: MonthKey;
   budgetsByMonth: Record<MonthKey, number>; // 单位：分
@@ -198,7 +126,6 @@ export type WalletState = {
   restoreBill: (bill: Bill) => void;
   dismissMonthAlert: (month: MonthKey) => void;
   clearAllWalletData: () => void;
-  resetSampleWalletData: () => void;
 };
 
 export const useWalletStore = create<WalletState>((set, get) => {
@@ -206,11 +133,9 @@ export const useWalletStore = create<WalletState>((set, get) => {
 
   return {
     selectedMonth: currentMonth,
-    budgetsByMonth: {
-      [currentMonth]: 128000, // ¥ 1,280.00 (matching Section 6.6 & 7.3)
-    },
+    budgetsByMonth: {},
     categories: DEFAULT_CATEGORIES,
-    bills: createInitialBills(),
+    bills: [],
     dismissedAlertMonths: {},
 
     setSelectedMonth: (selectedMonth) => set({ selectedMonth }),
@@ -289,15 +214,5 @@ export const useWalletStore = create<WalletState>((set, get) => {
         budgetsByMonth: {},
         bills: [],
       }),
-
-    resetSampleWalletData: () => {
-      const m = getCurrentMonthKey();
-      set({
-        selectedMonth: m,
-        budgetsByMonth: { [m]: 128000 },
-        bills: createInitialBills(),
-        dismissedAlertMonths: {},
-      });
-    },
   };
 });

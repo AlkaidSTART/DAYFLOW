@@ -64,11 +64,8 @@ export default function SettingsScreen() {
   const showSnackbar = useSettingsStore((s) => s.showSnackbar);
 
   const clearAllTasks = useTodayStore((s) => s.clearAllTasks);
-  const resetSampleTasks = useTodayStore((s) => s.resetSampleTasks);
   const clearSessions = useFocusStore((s) => s.clearSessions);
-  const resetSampleSessions = useFocusStore((s) => s.resetSampleSessions);
   const clearAllWalletData = useWalletStore((s) => s.clearAllWalletData);
-  const resetSampleWalletData = useWalletStore((s) => s.resetSampleWalletData);
 
   const currentVersion = useVersionStore((s) => s.currentVersion);
   const packageId = useVersionStore((s) => s.packageId);
@@ -112,23 +109,16 @@ export default function SettingsScreen() {
 
   const handleConfirmRestore = () => {
     triggerHaptic('warning', hapticEnabled);
-    resetSampleTasks();
-    resetSampleSessions();
-    resetSampleWalletData();
     setRestoreConfirmVisible(false);
-    showSnackbar('已从备份恢复全部数据');
+    showSnackbar('暂未发现本地备份文件');
   };
 
-  const handlePreviewEmptyStates = () => {
+  const handleClearAllData = () => {
     triggerHaptic('warning', hapticEnabled);
     clearAllTasks();
     clearSessions();
     clearAllWalletData();
-    showSnackbar('已切换为空状态，可前往各 Tab 查看', () => {
-      resetSampleTasks();
-      resetSampleSessions();
-      resetSampleWalletData();
-    });
+    showSnackbar('已清空本地全部数据');
   };
 
   return (
@@ -457,26 +447,13 @@ export default function SettingsScreen() {
 
               <View className="h-[1px] bg-line dark:bg-line-dark" />
 
-              {/* 验收辅助：一键切换空状态 / 恢复示例数据 */}
-              <View className="pt-1 flex-row gap-2">
+              <View className="pt-1">
                 <Button
-                  label="预览空状态"
-                  onPress={handlePreviewEmptyStates}
+                  label="清空本地数据"
+                  onPress={handleClearAllData}
                   variant="secondary"
                   size="sm"
-                  className="flex-1"
-                />
-                <Button
-                  label="恢复示例数据"
-                  onPress={() => {
-                    resetSampleTasks();
-                    resetSampleSessions();
-                    resetSampleWalletData();
-                    showSnackbar('已恢复示例数据');
-                  }}
-                  variant="secondary"
-                  size="sm"
-                  className="flex-1"
+                  className="w-full"
                 />
               </View>
             </View>
