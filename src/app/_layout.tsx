@@ -1,18 +1,91 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
+import '@/global.css';
+
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { useColorScheme as useNativeWindColorScheme } from 'nativewind';
+import React, { useEffect } from 'react';
+import { Appearance, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { Snackbar } from '@/components/ui/Snackbar';
+import { useSettingsStore } from '@/features/settings/store/settings-store';
+import { useResolvedTheme } from '@/hooks/use-resolved-theme';
+import { Palette } from '@/theme/tokens';
 
-SplashScreen.preventAutoHideAsync();
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+export default function RootLayout() {
+  const themePreference = useSettingsStore((s) => s.themePreference);
+  const { setColorScheme } = useNativeWindColorScheme();
+  const { isDark, palette } = useResolvedTheme();
+
+  // Section 12: 切换方式：设置项三选一，跟随系统时监听 Appearance 变化；切换即时生效
+  useEffect(() => {
+    if (themePreference === 'system') {
+      const sys = Appearance.getColorScheme() ?? 'light';
+      setColorScheme(sys);
+      const sub = Appearance.addChangeListener(({ colorScheme }) => {
+        setColorScheme(colorScheme ?? 'light');
+      });
+      return () => sub.remove();
+    } else {
+      setColorScheme(themePreference);
+    }
+  }, [themePreference, setColorScheme]);
+
+  useEffect(() => {
+    SplashScreen.hideAsync().catch(() => {});
+  }, []);
+
+  const navigationTheme = isDark
+    ? {
+        ...DarkTheme,
+        colors: {
+          ...DarkTheme.colors,
+          background: Palette.dark.canvas,
+          card: Palette.dark.surface,
+          text: Palette.dark.ink,
+          border: Palette.dark.line,
+          primary: Palette.dark.accent,
+        },
+      }
+    : {
+        ...DefaultTheme,
+        colors: {
+          ...DefaultTheme.colors,
+          background: Palette.light.canvas,
+          card: Palette.light.surface,
+          text: Palette.light.ink,
+          border: Palette.light.line,
+          primary: Palette.light.accent,
+        },
+      };
+
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <SafeAreaProvider>
+      <ThemeProvider value={navigationTheme}>
+        <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={palette.canvas} />
+        <View className={`flex-1 bg-canvas dark:bg-canvas-dark ${isDark ? 'dark' : ''}`}>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: palette.canvas },
+              animation: 'default',
+            }}>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="settings/index"
+              options={{
+                headerShown: false,
+                presentation: 'card',
+              }}
+            />
+          </Stack>
+          <Snackbar />
+        </View>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
