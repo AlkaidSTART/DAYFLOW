@@ -22,6 +22,9 @@ export function TaskLinkSheet({
   onClose,
 }: TaskLinkSheetProps) {
   const { palette } = useResolvedTheme();
+
+  if (!visible) return null;
+
   const incompleteTasks = tasks.filter((t) => t.completedAt === null);
 
   return (

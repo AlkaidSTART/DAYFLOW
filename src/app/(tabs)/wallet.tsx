@@ -127,10 +127,10 @@ export default function WalletScreen() {
     setBillSheetVisible(true);
   };
 
-  const handleOpenEditBill = (bill: Bill) => {
+  const handleOpenEditBill = React.useCallback((bill: Bill) => {
     setEditingBill(bill);
     setBillSheetVisible(true);
-  };
+  }, []);
 
   const handleSaveBill = (draft: BillDraft) => {
     triggerHaptic('taskDone', hapticEnabled);
@@ -143,15 +143,18 @@ export default function WalletScreen() {
     }
   };
 
-  const handleDeleteBill = (bill: Bill) => {
-    triggerHaptic('warning', hapticEnabled);
-    const removed = deleteBill(bill.id);
-    if (removed) {
-      showSnackbar('已删除账单', () => {
-        restoreBill(removed);
-      });
-    }
-  };
+  const handleDeleteBill = React.useCallback(
+    (bill: Bill) => {
+      triggerHaptic('warning', hapticEnabled);
+      const removed = deleteBill(bill.id);
+      if (removed) {
+        showSnackbar('已删除账单', () => {
+          restoreBill(removed);
+        });
+      }
+    },
+    [deleteBill, hapticEnabled, restoreBill, showSnackbar],
+  );
 
   const currentMonthKey = getCurrentMonthKey();
   const activeFilterCategory = filterCategoryId
@@ -388,30 +391,32 @@ export default function WalletScreen() {
       />
 
       {/* 月份切换弹层（MVP 默认展示本月并预留扩展位） */}
-      <Sheet
-        visible={monthSheetVisible}
-        onClose={() => setMonthSheetVisible(false)}
-        title="选择月份">
-        <View className="gap-2">
-          <Pressable
-            onPress={() => {
-              triggerHaptic('selection', hapticEnabled);
-              setSelectedMonth(currentMonthKey);
-              setMonthSheetVisible(false);
-            }}
-            accessibilityRole="radio"
-            accessibilityState={{ checked: selectedMonth === currentMonthKey }}
-            className="min-h-[52px] rounded-md px-4 py-3 bg-surface-selected dark:bg-surface-selected-dark flex-row items-center justify-between">
-            <Text className="text-body-strong text-ink dark:text-ink-dark">
-              本月（{currentMonthKey}）
+      {monthSheetVisible ? (
+        <Sheet
+          visible={monthSheetVisible}
+          onClose={() => setMonthSheetVisible(false)}
+          title="选择月份">
+          <View className="gap-2">
+            <Pressable
+              onPress={() => {
+                triggerHaptic('selection', hapticEnabled);
+                setSelectedMonth(currentMonthKey);
+                setMonthSheetVisible(false);
+              }}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: selectedMonth === currentMonthKey }}
+              className="min-h-[52px] rounded-md px-4 py-3 bg-surface-selected dark:bg-surface-selected-dark flex-row items-center justify-between">
+              <Text className="text-body-strong text-ink dark:text-ink-dark">
+                本月（{currentMonthKey}）
+              </Text>
+              <Ionicons name="checkmark-circle" size={20} color={palette.accent} />
+            </Pressable>
+            <Text className="text-micro text-ink-subtle dark:text-ink-subtle-dark px-1 mt-1">
+              历史月份归档统计将在后续版本开放。
             </Text>
-            <Ionicons name="checkmark-circle" size={20} color={palette.accent} />
-          </Pressable>
-          <Text className="text-micro text-ink-subtle dark:text-ink-subtle-dark px-1 mt-1">
-            历史月份归档统计将在后续版本开放。
-          </Text>
-        </View>
-      </Sheet>
+          </View>
+        </Sheet>
+      ) : null}
     </SafeAreaView>
   );
 }

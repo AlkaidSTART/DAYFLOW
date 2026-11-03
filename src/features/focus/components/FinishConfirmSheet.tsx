@@ -20,6 +20,8 @@ export function FinishConfirmSheet({
   onConfirmRecord,
   onConfirmDiscard,
 }: FinishConfirmSheetProps) {
+  if (!visible) return null;
+
   return (
     <Sheet visible={visible} onClose={onClose} title="结束本次专注并记录？">
       <View className="gap-4">

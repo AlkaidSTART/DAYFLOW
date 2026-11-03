@@ -93,29 +93,32 @@ export default function TodayScreen() {
     };
   }, [sessions]);
 
-  const handleToggleComplete = (task: Task) => {
-    const nowDone = toggleTaskComplete(task.id);
-    if (nowDone) {
-      // 检查是否刚刚完成了全部 Top 3
-      const updatedTop3 = useTodayStore
-        .getState()
-        .tasks.filter((t) => t.isTop3);
-      if (
-        task.isTop3 &&
-        updatedTop3.length === 3 &&
-        updatedTop3.every((t) => t.completedAt !== null)
-      ) {
-        triggerHaptic('complete', hapticEnabled);
-        showSnackbar('今天的重点已完成');
+  const handleToggleComplete = React.useCallback(
+    (task: Task) => {
+      const nowDone = toggleTaskComplete(task.id);
+      if (nowDone) {
+        // 检查是否刚刚完成了全部 Top 3
+        const updatedTop3 = useTodayStore
+          .getState()
+          .tasks.filter((t) => t.isTop3);
+        if (
+          task.isTop3 &&
+          updatedTop3.length === 3 &&
+          updatedTop3.every((t) => t.completedAt !== null)
+        ) {
+          triggerHaptic('complete', hapticEnabled);
+          showSnackbar('今天的重点已完成');
+        } else {
+          triggerHaptic('taskDone', hapticEnabled);
+        }
       } else {
-        triggerHaptic('taskDone', hapticEnabled);
+        triggerHaptic('selection', hapticEnabled);
       }
-    } else {
-      triggerHaptic('selection', hapticEnabled);
-    }
-  };
+    },
+    [toggleTaskComplete, hapticEnabled, showSnackbar],
+  );
 
-  const handleLongPressTask = () => {
+  const handleLongPressTask = React.useCallback(() => {
     setEditMode((prev) => {
       const next = !prev;
       if (next) {
@@ -123,7 +126,7 @@ export default function TodayScreen() {
       }
       return next;
     });
-  };
+  }, [showSnackbar]);
 
   const handleOpenAddTask = (isTop3: boolean) => {
     setEditingTask(null);
@@ -131,11 +134,11 @@ export default function TodayScreen() {
     setSheetVisible(true);
   };
 
-  const handleOpenEditTask = (task: Task) => {
+  const handleOpenEditTask = React.useCallback((task: Task) => {
     setEditingTask(task);
     setDefaultIsTop3(task.isTop3);
     setSheetVisible(true);
-  };
+  }, []);
 
   const handleSaveTask = (draft: TaskDraft) => {
     if (editingTask) {
@@ -158,19 +161,25 @@ export default function TodayScreen() {
     return res;
   };
 
-  const handleDeleteTask = (task: Task) => {
-    triggerHaptic('warning', hapticEnabled);
-    const removed = deleteTask(task.id);
-    if (removed) {
-      showSnackbar('已删除任务', () => {
-        restoreTask(removed);
-      });
-    }
-  };
+  const handleDeleteTask = React.useCallback(
+    (task: Task) => {
+      triggerHaptic('warning', hapticEnabled);
+      const removed = deleteTask(task.id);
+      if (removed) {
+        showSnackbar('已删除任务', () => {
+          restoreTask(removed);
+        });
+      }
+    },
+    [deleteTask, hapticEnabled, restoreTask, showSnackbar],
+  );
 
-  const handleMoveOrder = (task: Task, direction: 'up' | 'down') => {
-    moveTaskOrder(task.id, direction);
-  };
+  const handleMoveOrder = React.useCallback(
+    (task: Task, direction: 'up' | 'down') => {
+      moveTaskOrder(task.id, direction);
+    },
+    [moveTaskOrder],
+  );
 
   return (
     <SafeAreaView edges={['top']} className="flex-1 bg-canvas dark:bg-canvas-dark">
